@@ -1,0 +1,17 @@
+{
+  "name": "mikroserver",
+  "version": "0.0.0",
+  "description": "Common sense layer for Currenda Sawa",
+  "main": "lib/app.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "Currenda",
+    "Sawa",
+    "Court",
+    "Mikrosekcja"
+  ],
+  "author": "Tadeusz Łazurski <tadeusz@lazurski.pl> (http://lazurski.pl)",
+  "license": "GPL 3"
+}
