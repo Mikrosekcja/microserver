@@ -10,6 +10,10 @@ clean:
 
 init:
 	if [ -e npm-shrinkwrap.json ]; then rm npm-shrinkwrap.json; fi
+	mkdir -p assets/scripts/app/
+	mkdir -p scripts
+	touch .browserify
+
 	npm install
 
 browserify:
