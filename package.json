@@ -17,7 +17,10 @@
   "dependencies": {
     "teacup": "~0.2.10",
     "express": "~3.4.5",
-    "mssql": "~0.3.4"
+    "mssql": "~0.3.4",
+    "nconf": "~0.6.9",
+    "source-map-support": "~0.2.5",
+    "async": "~0.2.9"
   },
   "devDependencies": {
     "coffee-script": "~1.6.3"
