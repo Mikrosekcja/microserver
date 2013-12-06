@@ -53,7 +53,12 @@ class SQLStatement
     return query
 
   exec: (fields, done) ->
+    if not done and typeof fields is "function"
+      done    = fields
+      fields  = {}
+    
     request = new mssql.Request
     query   = @bind fields
+    request.query query, done
 
 module.exports = SQLStatement
