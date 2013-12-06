@@ -20,7 +20,10 @@
     "mssql": "~0.3.4",
     "nconf": "~0.6.9",
     "source-map-support": "~0.2.5",
-    "async": "~0.2.9"
+    "async": "~0.2.9",
+    "debug": "git://github.com/lzrski/debug.git#master",
+    "mongoose": "~3.8.1",
+    "lodash": "~2.4.1"
   },
   "devDependencies": {
     "coffee-script": "~1.6.3"
