@@ -44,6 +44,9 @@ module.exports = (options, done) ->
         ident: (value) ->
           if typeof value is "number" and value
             "and dane_strony.ident = #{value}"
+          else if typeof value is "object" and value.length?
+            value = value.map (e) -> Number e
+            "and dane_strony.ident in (#{value})"
           else
             ""
 
