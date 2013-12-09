@@ -1,17 +1,18 @@
 if not module.parent then do (require "source-map-support").install
 
-debug   = require "debug"
+debug     = require "debug"
 
 
-async   = require "async"
-_       = require "lodash"
+async     = require "async"
+_         = require "lodash"
+
+mssql     = require "mssql"
+Statement = require "./SQLStatement"
+
+Lawsuit   = require "../models/Lawsuit"
+Subject   = require "../models/Subject"
 
 
-
-mssql   = require "mssql"
-
-Lawsuit = require "../models/Lawsuit"
-Subject = require "../models/Subject"
 
 $       = debug "SyncService:Connector:Sawa"
 
@@ -41,51 +42,134 @@ class SawaConnector
       done    = options
       options = {}
 
-    
-    # Create Lawsuit documents
-    # TODO: first check if we already have them
-    (rows, done) ->
-      $ "%d lawsuits found", rows.length
-      async.map rows,
-        (row, done) ->
-          done null, new Lawsuit
-            repository: row.symbol.trim()
-            year      : row.rok
-            number    : row.numer
-            file_date : row.d_wplywu
-            _sync     :
-              sawa      :
-                last      : new Date
-                ident     : row.ident
-        done
+    async.waterfall [
+      (done) -> # Get rows from sprawa + repertorium
+        $ "Looking for lawsuits"
+        sprawa = new Statement """
+          Select :limit
+            sprawa.ident,
+            repertorium.symbol as repertorium,
+            sprawa.rok,
+            sprawa.numer,
+            sprawa.d_wplywu
+          from
+            sprawa
+            inner join repertorium on sprawa.repertorium = repertorium.numer
+          where
+            sprawa.czyus = 0
+            :ident
+            :repertorium
+          order by
+            sprawa.ident desc
+          """,
+          limit       : (value) -> if typeof value is "number" and value then "top #{value}" else ""
+          ident       : Statement.helpers.where "sprawa.ident",       Number
+          repertorium : Statement.helpers.where "repertorium.symbol", String
 
-    # WHAT A MESS :P
-    # In 20 minutes they will the turn the power off in the office for UPS maintenence so I have to commit whatever works and go. SQL Server is down already anyway, so not much can be done.
+        $ sprawa.bind options
+        sprawa.exec options, done
+      (rows, done) -> # Create Lawsuit documents
+        $ "There are %d lawsuits here.", rows.length
+        async.mapSeries rows, # Do we really need that? eachSeries would be less memory hungry probabily.
+          (row, done) ->
+            async.waterfall [
+              (done) -> Lawsuit.findOne "_sync.sawa.ident": row.ident, done
+              (lawsuit, done) ->
+                $ "Lawsuit is %j", lawsuit
+                
+                if lawsuit 
+                  $ "We already know this lawsuit. It's %s. Skipping to next.", lawsuit.reference_sign
+                  return done (Error "Already synced"), lawsuit # TODO: compare and sync
+                                                                # Error will be nullified down the drain
+                else
+                  $ "That's a new lawsuit. It's filed as %s", "#{row.repertorium} #{row.numer} / #{row.rok}"
+                  done null, new Lawsuit
+                    repository: row.repertorium.trim()
+                    year      : row.rok
+                    number    : row.numer
+                    file_date : row.d_wplywu
+                    _sync     :
+                      sawa      :
+                        last      : new Date
+                        ident     : row.ident
 
-    # Get rows from roszczenie
-    # (lawsuits, done) ->
-    #   async.map lawsuits,
-    #     (lawsuit, done) ->
-    #       sql = """
-    #         Select
-    #           ident,
-    #           opis
-    #         from 
-    #           roszczenie
-    #         where 
-    #           id_sprawy = #{lawsuit._sync.sawa.ident}
-    #           and typ_kwoty = 4
-    #       """
-    #       request = new mssql.Request # TODO: what happens to request once they are queried and go out of scope? Do they leak?
-    #       request.query sql, (error, rows) ->
-    #         # $ "Claims for lawsuit %s are %j", lawsuit.repository + " " + lawsuit.number + " / " + lawsuit.year, rows
-    #         if error then return done error
-    #         rows.forEach (row) -> lawsuit.claims.push
-    #           type  : "Uznanie postanowienia wzorca umowy za niedozwolone"
-    #           value : row.opis.trim()
-    #         done null, lawsuit
-    #     done
-    
+              # Get rows from roszczenie and store in lawsuit document
+              (lawsuit, done) ->
+                async.waterfall [
+                  (done) ->
+                    roszczenie = new Statement """
+                      Select
+                        ident,
+                        opis
+                      from 
+                        roszczenie
+                      where 
+                        typ_kwoty = 4
+                        :id_sprawy                        
+                      """,
+                      id_sprawy: Statement.helpers.where "id_sprawy", Number
+
+                    roszczenie.exec id_sprawy: lawsuit._sync.sawa.ident, done
+                  (rows, done) ->
+                    $ "Claims for lawsuit %s are %j", lawsuit.reference_sign, rows
+                    rows.forEach (row) -> lawsuit.claims.push
+                      type  : "Uznanie postanowienia wzorca umowy za niedozwolone"
+                      value : row.opis.trim()
+                    done null, lawsuit
+
+                ], done
+
+              # Get rows from strona + status
+              (lawsuit, done) ->
+                async.waterfall [
+                  (done) ->
+                    strona = new Statement """
+                      Select
+                        dane_strony.ident,
+                        status.nazwa as status
+                      from 
+                        strona
+                        inner join status on strona.id_statusu = status.ident
+                        inner join dane_strony on strona.id_danych = dane_strony.ident
+                      where 
+                        strona.czyus = 0
+                        :id_sprawy                        
+                      """,
+                      id_sprawy: Statement.helpers.where "strona.id_sprawy", Number
+
+                    strona.exec id_sprawy: lawsuit._sync.sawa.ident, done
+                  (rows, done) ->
+                    $ "There are %d party people in this suit. Put on your suit and dance!", rows.length
+                    # TODO: sync selected subjects, and then ...
+                    # Find subject document
+                    async.each rows,
+                      (row, done) ->
+                        async.parallel
+                          subject : (done) ->
+                            Subject.findOne "_sync.sawa.dane_strony_ident": row.ident, (error, subject) ->
+                              $ "Subject is %j", subject
+                              done error, subject
+                          role    : (done) -> done null, row.status.trim()
+                          (error, party) ->
+                            if error then return done error
+                            lawsuit.parties.push party
+                            done null
+                      (error) -> done error, lawsuit
+                ], done
+
+              # Get rows from broni
+            ], (error, lawsuit) ->
+              if error? and error.message is "Already synced" then error = null
+              if error then return done error
+              lawsuit.save (error) -> done error, lawsuit
+
+          done
+    ], (error, lawsuits) ->
+      if error then throw error
+      done null, lawsuits.length 
+
+        
+  
     # Map patries and their attorneys to case.
     # That's a bit tricky part. We have to use mapSeries, to make sure newly discovered subjects get saved before they are encountered for a second time.
     # (lawsuits, done) ->
@@ -152,57 +236,6 @@ class SawaConnector
   #       do mongoose.connection.close
 
 
-  # TODO: just import!
-
-  # class SawaConnector
-  #   list: (Model, done) ->
-  #     $ "The list switch"
-  #     switch Model.modelName 
-  #       when "Lawsuit"
-  #         async.waterfall [
-  #           # Get lawsuits from Sawa DB
-  #           (done) ->
-  #             $ "Getting list of lawsuits"
-
-  #           # Get claims
-  #           (lawsuits, done) ->
-  #             $ "Populating with claims"
-  #             map = (lawsuit, done) ->
-                  
-  #               request = new mssql.Request
-
-  #               request.query sql, (error, claims) ->
-  #                 if error then return done error
-  #                 lawsuit.claims = claims
-  #                 done null, lawsuit
-
-  #             async.map lawsuits, map, done
-
-  #           # Get parties
-  #           (lawsuits, done) ->
-  #             $ "Populating with parties"
-  #             map = (lawsuit, done) ->
-  #               # TODO: only find ident, role and attorney ident
-  #               # Population should be done by application logic
-                  
-  #               request = new mssql.Request
-
-  #               request.query sql, (error, parties) ->
-  #                 if error then return done error
-  #                 lawsuit.parties = parties
-  #                 done null, lawsuit
-
-  #             async.map lawsuits, map, done
-
-                
-  #         ], done(error, lawsuits) ->
-  #           if error then return done error
-  #           done null, lawsuits 
-  #           # .map (lawsuit) ->
-  #           #  return
-  #           #    repository: lawsuit.
-
-
 
 # Are we standing alone?
 if not module.parent
@@ -219,13 +252,13 @@ if not module.parent
   connector = new SawaConnector config
   async.series [
     (done) -> async.parallel
-      subjects: (done) -> Subject.remove done
+      # subjects: (done) -> Subject.remove done
       lawsuits: (done) -> Lawsuit.remove done
       done
 
     # Sync subjects
-    (done) -> connector.syncSubjects done
-    (done) -> connector.syncLawsuits limit: 10, done
+    (done) -> connector.syncSubjects ident: [1,2,3,4], limit: 5, done
+    (done) -> connector.syncLawsuits limit: 10, repertorium: "AmC", done
     
     connector.close
   ], (error) ->

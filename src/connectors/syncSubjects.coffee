@@ -41,21 +41,9 @@ module.exports = (options, done) ->
           :ident
         """,
         limit: (value) -> if typeof value is "number" and value then "top #{value}" else ""
-        ident: (value) ->
-          if typeof value is "number" and value
-            "and dane_strony.ident = #{value}"
-          else if typeof value is "object" and value.length?
-            value = value.map (e) -> Number e
-            "and dane_strony.ident in (#{value})"
-          else
-            ""
+        ident: Statement.helpers.where "dane_strony.ident", Number
 
-      dane_strony.defaults =
-        limit     : null
-        ident     : null
-
-      fields = _.pick options, ["limit", "ident"]
-      dane_strony.exec fields, done
+      dane_strony.exec options, done
 
     # Find or create subject documents
     (rows, done) ->
