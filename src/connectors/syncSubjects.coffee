@@ -1,5 +1,5 @@
 debug   = require "debug"
-$       = debug "SyncService:Connector:Sawa:SyncSubjects"
+
 
 async   = require "async"
 _       = require "lodash"
@@ -54,17 +54,22 @@ obronca = new Statement """
   # TODO: if no first nor last name then rise an error and handle it down the drain
 
 module.exports = (options, done) ->
-  $ "Syncing subjects"
+  $ = debug "SyncService:Connector:Sawa:SyncSubjects"
   if not done and typeof options is "function"
     done    = options
     options = {}
+
+  $ "%j", options
+  if options.dane_strony_ident? then $ = $.narrow "DSI(#{options.dane_strony_ident})"
+  if options.obronca_ident?     then $ = $.narrow "OI(#{options.obronca_ident})"
 
   async.parallel [
     # EACH 1: Get subjects from Sawa's dane_strony table
     (done) -> async.waterfall [
       # Get rows from dane strony
       (done) ->
-        if options.obronca_ident? and not options.dane_strony_ident? then done null, []
+        if options.obronca_ident? and not options.dane_strony_ident? then return done null, []
+        if options.dane_strony_ident?.length is 0 then return done null, []
         $ "Looking for parties!"
         dane_strony.exec options, done
 
@@ -104,7 +109,8 @@ module.exports = (options, done) ->
     (done) -> async.waterfall [
       # Get rows from obronca
       (done) ->
-        if options.dane_strony_ident? and not options.obronca_ident? then done null, []
+        if options.dane_strony_ident? and not options.obronca_ident? then return done null, []
+        if options.obronca_ident?.length is 0 then return done null, []
         $ "Looking for attorneys!"
         obronca.exec options, done
 
@@ -139,4 +145,4 @@ module.exports = (options, done) ->
             ], done 
           done # Finding or creating subject document
     ], done
-  ], done
+  ], (error) -> done error

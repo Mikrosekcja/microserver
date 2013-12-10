@@ -1,5 +1,5 @@
 debug     = require "debug"
-$         = debug "SyncService:Connector:Sawa:SyncSubjects"
+$         = debug "SyncService:Connector:Sawa:SyncLawsuits"
 
 async     = require "async"
 _         = require "lodash"
@@ -28,7 +28,7 @@ sprawa = new Statement """
   order by
     sprawa.ident desc
   """,
-  limit       : (value) -> if typeof value is "number" and value then "top #{value}" else ""
+  limit       : (value) => if typeof value is "number" and value then "top #{value}" else ""
   ident       : Statement.helpers.where "sprawa.ident",       Number
   repertorium : Statement.helpers.where "repertorium.symbol", String
 
@@ -72,8 +72,6 @@ broni = new Statement """
   id_strony: Number
 
 module.exports = (options, done) ->
-  console.dir @
-
   if not done and typeof options is "function"
     done    = options
     options = {}
@@ -83,16 +81,14 @@ module.exports = (options, done) ->
   # TODO: It's one hairy async mess! Modularize!
 
   async.waterfall [
-    (done) -> sprawa.exec options, done
-    (rows, done) -> # Create Lawsuit documents
+    (done) => sprawa.exec options, done
+    (rows, done) => # Create Lawsuit documents
       $ "There are %d lawsuits here.", rows.length
       async.mapSeries rows, # Do we really need that? eachSeries would be less memory hungry probabily.
-        (row, done) ->
+        (row, done) =>
           async.waterfall [
-            (done) -> Lawsuit.findOne "_sync.sawa.ident": row.ident, done
-            (lawsuit, done) ->
-              $ "Lawsuit is %j", lawsuit
-              
+            (done) => Lawsuit.findOne "_sync.sawa.ident": row.ident, done
+            (lawsuit, done) =>
               if lawsuit 
                 $ "We already know this lawsuit. It's %s. Skipping to next.", lawsuit.reference_sign
                 return done (Error "Already synced"), lawsuit # TODO: compare and sync
@@ -110,61 +106,63 @@ module.exports = (options, done) ->
                       ident     : row.ident
 
             # Collect claims
-            (lawsuit, done) -> async.waterfall [
+            (lawsuit, done) => async.waterfall [
               # Get rows from roszczenie and store in lawsuit document
-              (done) -> roszczenie.exec id_sprawy: lawsuit._sync.sawa.ident, done
+              (done) => roszczenie.exec id_sprawy: lawsuit._sync.sawa.ident, done
               # Push claims to lawsuit document
-              (rows, done) ->
+              (rows, done) =>
                 $ "Claims for lawsuit %s are %j", lawsuit.reference_sign, rows
-                rows.forEach (row) -> lawsuit.claims.push
+                rows.forEach (row) => lawsuit.claims.push
                   type  : "Uznanie postanowienia wzorca umowy za niedozwolone"
                   value : row.opis.trim()
                 done null, lawsuit
             ], done
 
             # Collect parties
-            (lawsuit, done) ->
+            (lawsuit, done) =>
               async.waterfall [
                 # Get  Get rows from strona + status
-                (done) -> strona.exec id_sprawy: lawsuit._sync.sawa.ident, done
+                (done) => strona.exec id_sprawy: lawsuit._sync.sawa.ident, done
                 # Prepare parties subdocuments
-                (rows, done) ->
+                (rows, done) =>
                   $ "There are %d party people in this suit. Put on your suit and dance!", rows.length
                   # TODO: sync selected subjects, and then ...
                   # Find subject document
                   async.each rows,
-                    (row, done) ->
+                    (row, done) =>
                       async.parallel
-                        subject   : (done) ->
-                          Subject.findOne "_sync.sawa.dane_strony_ident": row.dane_strony_ident, (error, subject) ->
-                            $ "Subject is %j", subject
-                            done error, subject
-                        role      : (done) -> done null, row.status.trim()
-                        attorneys : (done) ->
+                        subject   : (done) =>
+                          async.waterfall [
+                            (done) => @syncSubjects dane_strony_ident: row.dane_strony_ident, done
+                            (done) => Subject.findOne "_sync.sawa.dane_strony_ident": 1, done
+                          ], done
+                        role      : (done) => done null, row.status.trim()
+                        attorneys : (done) =>
                           async.waterfall [
                             # Get rows from broni
-                            (done) -> broni.exec id_strony: row.ident, done
+                            (done) => broni.exec id_strony: row.ident, done
                             # Find subject documents
-                            (rows, done) ->
-                              ids = rows.map( (row) -> row.id_obroncy )
+                            (rows, done) =>
+                              ids = rows.map( (row) => row.id_obroncy )
                               $ "Looking for attorneys with ident in %j", ids
+                              @syncSubjects obronca_ident: ids, (error) -> done error, ids
+                            (ids, done) =>
                               Subject.findOne "_sync.sawa.obronca_ident": $in: ids, done
                           ], done
-                        (error, party) ->
+                        (error, party) =>
                           if error then return done error
                           lawsuit.parties.push party
                           $ "Party is %j", party
                           done null
-                    (error) -> done error, lawsuit
+                    (error) => done error, lawsuit
               ], done
 
             # Get rows from broni
-          ], (error, lawsuit) ->
+          ], (error, lawsuit) =>
             if error? and error.message is "Already synced" then error = null
             if error then return done error
-            lawsuit.save (error) -> done error, lawsuit
+            lawsuit.save (error) => done error, lawsuit
 
         done
-  ], (error, lawsuits) ->
-    if error then throw error
-    done null, lawsuits.length 
+  ], (error, lawsuits) => done error
+    

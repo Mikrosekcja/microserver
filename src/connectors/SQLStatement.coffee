@@ -2,7 +2,7 @@ _     = require "lodash"
 mssql = require "mssql"
 
 debug   = require "debug"
-$       = debug "SyncService:Connector:Sawa:SQLStatement"
+$       = debug "SQLStatement"
 
 class SQLStatement
   @escape : (string = "") ->
@@ -45,6 +45,8 @@ class SQLStatement
     where       : (column, type, first = no) ->
       (value) ->
         if not value? then return ""
+        if typeof value is "object" and value.length? and not value.length 
+          throw Error "Empty arrays not supported in where helper (#{column})"
 
         clause  = "and " unless first 
         clause += column
@@ -54,13 +56,13 @@ class SQLStatement
             if      typeof value is "number"
               clause += " = #{value}"
             
-            else if typeof value is "object" and value.length?
+            else if typeof value is "object" and value.length
               clause += " in (#{value.map (e) -> Number e})"
             
-            else throw Error "Not a number"
+            else throw Error "Not a number in where #{column}: #{value}"
           
           when "String"
-            if typeof value is "object" and value.length?
+            if typeof value is "object" and value.length
               value   = value.map (e) -> "'#{SQLStatement.escape e}'"
               clause += " in (#{value})"
             else
