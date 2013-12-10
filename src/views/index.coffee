@@ -5,7 +5,7 @@
   div, aside
   h2, h3, h4
   p
-  span, a, i, strong, pre, small
+  span, a, i, strong, pre, small, em
   br, hr
 } = require "teacup"
 
@@ -26,7 +26,12 @@ module.exports = renderable (data) ->
         for party in @lawsuit.parties
           h4 =>
             i class: "fa fa-user"
-            text " " + party.subject.name.full
+            text " "
+            a href: "#", party.subject.name.full
+            if party.attorneys? 
+              for attorney in party.attorneys
+                text " "
+                a href: "#", => em attorney.name.full
             small " " + party.role
 
         # form

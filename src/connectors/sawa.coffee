@@ -61,7 +61,7 @@ if not module.parent
 
     # Sync subjects
     # (done) -> connector.syncSubjects limit: 5, done
-    (done) -> connector.syncLawsuits limit: 100, done
+    (done) -> connector.syncLawsuits limit: 4, done
     
     connector.close
   ], (error) ->

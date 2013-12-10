@@ -29,7 +29,8 @@ module.exports = renderable (content) ->
       div class: "container", id: "content", =>
         header class : "page-header", =>
           h1 =>
-            text @title + " "
+            if @page.icon? then i class: "fa fa-" + @page.icon
+            text " " + @title + " "
             br class: "visible-xs visible-sm"
             small @page?.title or @settings?.site.motto
 

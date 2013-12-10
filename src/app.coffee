@@ -35,6 +35,7 @@ app.get "/suits/:repository/:year/:number", (req, res) ->
       $ "Getting %j", conditions
       Lawsuit.findOne(conditions)
         .populate("parties.subject")
+        .populate("parties.attorneys")
         .exec (error, lawsuit) ->
           if error then return done error
           if not lawsuit then return done Error "Not found"
@@ -43,7 +44,8 @@ app.get "/suits/:repository/:year/:number", (req, res) ->
           res.locals
             title: lawsuit.reference_sign
             page :
-              title: "Lawsuit"
+              title : "Lawsuit"
+              icon  : "folder-o"
 
           done null
     (done) ->

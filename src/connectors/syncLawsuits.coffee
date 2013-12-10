@@ -134,7 +134,7 @@ module.exports = (options, done) ->
                         subject   : (done) =>
                           async.waterfall [
                             (done) => @syncSubjects dane_strony_ident: row.dane_strony_ident, done
-                            (done) => Subject.findOne "_sync.sawa.dane_strony_ident": 1, done
+                            (done) => Subject.findOne "_sync.sawa.dane_strony_ident": row.dane_strony_ident, done
                           ], done
                         role      : (done) => done null, row.status.trim()
                         attorneys : (done) =>
@@ -144,10 +144,13 @@ module.exports = (options, done) ->
                             # Find subject documents
                             (rows, done) =>
                               ids = rows.map( (row) => row.id_obroncy )
-                              $ "Looking for attorneys with ident in %j", ids
+                              $ "Syncing attorneys with ident in %j", ids
                               @syncSubjects obronca_ident: ids, (error) -> done error, ids
                             (ids, done) =>
-                              Subject.findOne "_sync.sawa.obronca_ident": $in: ids, done
+                              $ "Looking for attorneys with ident in %j", ids
+                              Subject.findOne "_sync.sawa.obronca_ident": $in: ids, (error, attorney) ->
+                                $ "Attorney is %s", attorney?.name.full or "no one"
+                                done error, attorney
                           ], done
                         (error, party) =>
                           if error then return done error
