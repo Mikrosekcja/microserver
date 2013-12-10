@@ -10,9 +10,10 @@ lawsuit = new mongoose.Schema
       type      : mongoose.Schema.ObjectId
       ref       : "Subject"
     role      : String
-    attorney  :
+    attorneys : [
       type      : mongoose.Schema.ObjectId
       ref       : "Subject"
+    ]
   ]
   claims    : [
     type      : 
