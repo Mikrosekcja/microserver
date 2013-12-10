@@ -3,9 +3,9 @@
   doctype, html, head, body
   form, input, button, label
   div, aside
-  h2, h3
+  h2, h3, h4
   p
-  span, a, i, strong
+  span, a, i, strong, pre, small
   br, hr
 } = require "teacup"
 
@@ -16,39 +16,46 @@ module.exports = renderable (data) ->
   layout.call @, =>
     div class: "row", =>
       tag "main", class: "col-xs-12 col-sm-9", =>
-        div class: "jumbotron", =>
-          h2 =>
-            i class: "fa fa-folder-open-o"
+        h3 "Roszczenia"
+        for claim in @lawsuit.claims
+          h4 => small claim.type
+          pre claim.value
 
-            text " " + "12 234 325 325 / 14"
-          do hr
-          form
-            method: "get"
-            class : "form-horizontal"
-            =>
-              div class: "form-group", =>
-                label
-                  for   : "date"
-                  class : "col-sm-6"
-                  "Submission date"
-                div class: "col-sm-6", =>
-                  input 
-                    id    : "date"
-                    value : "2014-03-22"
-                    name  : "date"
-                    type  : "text"
-                    class : "form-control"
+        do hr
+        h3 "Strony"
+        for party in @lawsuit.parties
+          h4 =>
+            i class: "fa fa-user"
+            text " " + party.subject.name.full
+            small " " + party.role
 
-              div class: "form-group", =>
-                p class: "text-center text-muted", => i class: "fa fa-ellipsis-h fa-2x"
+        # form
+        #   method: "get"
+        #   class : "form-horizontal"
+        #   =>
+        #     div class: "form-group", =>
+        #       label
+        #         for   : "date"
+        #         class : "col-sm-6"
+        #         "Submission date"
+        #       div class: "col-sm-6", =>
+        #         input 
+        #           id    : "date"
+        #           value : @lawsuit.file_date
+        #           name  : "date"
+        #           type  : "text"
+        #           class : "form-control"
 
-              div class: "form-group", =>
-                button
-                  class: "btn btn-block btn-primary btn-lg"
-                  type: "submit"
-                  =>
-                    i class: "fa fa-plus-circle"
-                    text " " + "save"
+        #     div class: "form-group", =>
+        #       p class: "text-center text-muted", => i class: "fa fa-ellipsis-h fa-2x"
+
+            # div class: "form-group", =>
+        button
+          class: "btn btn-block btn-primary btn-lg"
+          type: "submit"
+          =>
+            i class: "fa fa-edit"
+            text " " + "zmień dane"
 
         # button 
         #   type  : "button"
@@ -77,16 +84,23 @@ module.exports = renderable (data) ->
                       type      : "submit"
                       => i class: "fa fa-search"
 
-            div class: "panel-body", => div class: "list-group", => for suit in @suits
-              a href: "#", class: "list-group-item", =>
-                h3 class: "text-muted", =>
+            div class: "panel-body", => div class: "list-group", => for suit in @lawsuits
+              a href: "/suits/#{suit.repository}/#{suit.year}/#{suit.number}", class: "list-group-item", =>
+                p class: "text-muted", =>
                   span class: "fa-stack fa-sm", =>
                     i class: "fa fa-stack-2x fa-folder"
                     i class: "fa fa-plus fa-stack-1x fa-inverse"
 
-                  text " " + suit.index + " / " + suit.year.toString().slice 2
+                  text " " + suit.reference_sign
 
-                p suit.summary               
+                for party in suit.parties
+                  p => small =>
+                    i class: "fa fa-user"
+                    text " " + party.subject.name.full
+
+                for claim in suit.claims
+                  if claim.type is "Uznanie postanowienia wzorca umowy za niedozwolone"
+                    small => pre style: "overflow: hidden; max-height: 100px; font-size: 80%", claim.value
 
                 
 

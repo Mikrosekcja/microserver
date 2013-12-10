@@ -6,7 +6,10 @@ subject = new mongoose.Schema
     last  : String
 
 subject.virtual("name.full")
-  .get -> "#{@name.first} #{@name.last}"
+  .get -> 
+    if @name.first then "#{@name.first } #{@name.last}"
+    else @name.last
+  
 
 subject.plugin (require "../SyncService").plugin
 

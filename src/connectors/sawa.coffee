@@ -105,6 +105,8 @@ class SawaConnector
                         roszczenie
                       where 
                         typ_kwoty = 4
+                        and roszczenie.czyus = 0
+                        and roszczenie.opis is not null
                         :id_sprawy                        
                       """,
                       id_sprawy: Statement.helpers.where "id_sprawy", Number
@@ -257,8 +259,8 @@ if not module.parent
       done
 
     # Sync subjects
-    (done) -> connector.syncSubjects ident: [1,2,3,4], limit: 5, done
-    (done) -> connector.syncLawsuits limit: 10, repertorium: "AmC", done
+    # (done) -> connector.syncSubjects ident: [1,2,3,4], limit: 5, done
+    (done) -> connector.syncLawsuits repertorium: "AmC", done
     
     connector.close
   ], (error) ->
