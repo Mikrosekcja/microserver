@@ -1,3 +1,5 @@
+debug   = require "debug"
+$       = debug "microserver:views:index"
 {
   renderable, text, raw, tag
   doctype, html, head, body
@@ -7,10 +9,12 @@
   p
   span, a, i, strong, pre, small, em
   br, hr
-} = require "teacup"
+  ul, ol, li
+}       = require "teacup"
 
-layout = require "./layouts/default"
+layout  = require "./layouts/default"
 
+_       = require "lodash"
 
 module.exports = renderable (data) -> 
   layout.call @, =>
@@ -23,16 +27,30 @@ module.exports = renderable (data) ->
 
         do hr
         h3 "Strony"
-        for party in @lawsuit.parties
-          h4 =>
-            i class: "fa fa-user"
-            text " "
-            a href: "#", party.subject.name.full
-            if party.attorneys? 
-              for attorney in party.attorneys
-                text " "
-                a href: "#", => em attorney.name.full
-            small " " + party.role
+        roles = _.groupBy @lawsuit.parties, "role"
+        for role, parties of roles
+          div class: "panel panel-default", => div class: "panel-body", =>
+            h4 role
+            attorneys = _.groupBy parties, (party) =>
+              $ "Grouping by attorneys"
+              if not party.attorneys? then return ""
+              names = (attorney.name.full for attorney in party.attorneys).join ", "
+              $ "Reduced names are %j", names
+              names
+
+            ul class: "fa-ul", => for attorney, parties of attorneys
+              li => 
+                if attorney 
+                  i class: "fa fa-li fa-briefcase"
+                  strong attorney
+                ul class: "fa-ul", => for party in parties
+                  li =>
+                    i class: "fa-li fa fa-user"
+                    a href: "#", party.subject.name.full
+
+
+          # attorneys = _.groupBy parties, "attorneys"
+            
 
         # form
         #   method: "get"
