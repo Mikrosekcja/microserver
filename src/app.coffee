@@ -15,16 +15,68 @@ debug   = require "debug"
 
 $       = debug "microserver"
 
-# data    = require "./dummy-data"
-# app.get "/", (req, res) ->
-#   template = require "./views/index"
-#   locals = 
-#      suits: data.suits
-#     title: "Microserver"
-#     page:
-#       title: "new lawsuit" 
+app.get "/", (req, res) ->
 
-#   res.send template.call locals
+  { query } = req.query
+
+  # if query then conditions = 
+  #   $or:
+  #     number  : query
+  #     parties : name: $or:
+  #       first   : new RegExp query
+  #       last    : new RegExp query
+  #     parties : attorneys: name: $or
+  #       first   : new RegExp query
+  #       last    : new RegExp query
+
+  async.parallel
+    lawsuits: (done) -> async.waterfall [
+      # Prepare conditions
+      # Find matching subjects
+      (done) ->
+        Subject.find()
+        .or("name.last": new RegExp query, "i")
+        .or("name.first": new RegExp query, "i")
+        # .or ([
+        #   "name.first": new RegExp query
+        # ,
+        #   "name.last": new RegExp query 
+        # ])
+        .limit(100)
+        .select("_id")
+        .exec done
+
+      # Find matching lawsuits
+      (subjects, done) ->
+        ids = subjects.map (subject) -> subject._id
+        $ "Looking for suits where attorneys parties or attorneys are: %j", ids
+        Lawsuit.find()
+        .or("parties.attorneys": $in: subjects)
+        .or("parties.subject": $in: subjects)
+        .or("claims.value": new RegExp query, "i")
+        .limit(100)
+        .populate("parties.subject")
+        .populate("parties.attorneys")
+        .exec done
+    ], done
+    
+    count   : (done) -> Lawsuit.count done
+    
+    (error, data) ->
+      if error then throw error
+
+      res.locals
+        title: "Mikroserver"
+        page :
+          title : "Mikrosekcja daje radę."
+          icon  : "fighter-jet"
+      
+      res.locals data
+
+      template = require "./views/index"
+      res.send template.call res.locals
+
+
 
 app.get "/suits/:repository/:year/:number", (req, res) ->
   conditions = _.pick req.params, ["repository", "year", "number"]
@@ -67,7 +119,7 @@ app.get "/suits/:repository/:year/:number", (req, res) ->
       $ "Error %j", error
       if error.message is "Not found" then return res.send "<strong>Wow! 404</strong><br />We have 40 000 lawsuits, but this one is missing. Sorry :P"
       else throw error
-    template = require "./views/index"
+    template = require "./views/lawsuits/single"
     res.send template.call res.locals
 
 mongoose.connect "mongodb://localhost/test"
