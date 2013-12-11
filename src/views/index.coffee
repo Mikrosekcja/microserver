@@ -38,7 +38,11 @@ module.exports = renderable (data) ->
                     type      : "submit"
                     => i class: "fa fa-question-circle"
 
-        div class: "list-group", =>
+        if not @lawsuits? then div class: "well", "C'mon, search me!"
+        
+        else if not @lawsuits.length then div class: "alert alert-info", "Nothing like that here."
+        
+        else div class: "list-group", =>
           for suit in @lawsuits
             a href: "/suits/#{suit.repository}/#{suit.year}/#{suit.number}", class: "list-group-item", =>
               h4 class: "text-muted list-group-item-heading", =>
@@ -59,6 +63,7 @@ module.exports = renderable (data) ->
                       text party.subject.name.full + " "
                     if attorney then text "(" + attorney + ")"
                   do br
-            # for claim in suit.claims
-            #   if claim.type is "Uznanie postanowienia wzorca umowy za niedozwolone"
-            #     small => pre style: "overflow: hidden; max-height: 100px; font-size: 80%", claim.value
+              
+              for claim in suit.claims
+                if claim.type is "Uznanie postanowienia wzorca umowy za niedozwolone"
+                  small => pre style: "overflow: hidden; max-height: 100px; font-size: 80%", claim.value

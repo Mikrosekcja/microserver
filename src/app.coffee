@@ -34,6 +34,8 @@ app.get "/", (req, res) ->
       # Prepare conditions
       # Find matching subjects
       (done) ->
+        if not query then return done null
+
         Subject.find()
         .or("name.last": new RegExp query, "i")
         .or("name.first": new RegExp query, "i")
@@ -48,8 +50,9 @@ app.get "/", (req, res) ->
 
       # Find matching lawsuits
       (subjects, done) ->
-        ids = subjects.map (subject) -> subject._id
-        $ "Looking for suits where attorneys parties or attorneys are: %j", ids
+        if not done and typeof subjects is "function" then done = subjects
+        if not query then return done null
+
         Lawsuit.find()
         .or("parties.attorneys": $in: subjects)
         .or("parties.subject": $in: subjects)
@@ -65,13 +68,13 @@ app.get "/", (req, res) ->
     (error, data) ->
       if error then throw error
 
+      res.locals data
+      res.locals { query }
       res.locals
         title: "Mikroserver"
         page :
           title : "Mikrosekcja daje radę."
           icon  : "fighter-jet"
-      
-      res.locals data
 
       template = require "./views/index"
       res.send template.call res.locals
@@ -83,6 +86,7 @@ app.get "/suits/:repository/:year/:number", (req, res) ->
   
 
   async.series [
+    # Find this lawsuit
     (done) ->
       $ "Getting %j", conditions
       Lawsuit.findOne(conditions)
@@ -100,6 +104,41 @@ app.get "/suits/:repository/:year/:number", (req, res) ->
               icon  : "folder-o"
 
           done null
+    # Find next and previous lawsuit
+    (done) ->
+      {
+        number
+        year
+        repository
+      } = res.locals.lawsuit
+
+      async.parallel
+        next: (done) ->
+          Lawsuit.find(
+              repository: repository
+              year      : year
+              number    : $gt: number
+            )
+            .sort(number: 1)
+            .limit(1)
+            .exec (error, lawsuits) -> done error, lawsuits[0]
+
+        prev: (done) ->
+          Lawsuit.find(
+              repository: repository
+              year      : year
+              number    : $lt: number
+            )
+            .sort(number: -1)
+            .limit(1)
+            .exec (error, lawsuits) -> done error, lawsuits[0]
+        
+        (error, lawsuits) ->
+          if error then return done error
+          $ "%j", lawsuits
+          res.locals lawsuits
+          done null
+
     (done) ->
       r = Math.floor Math.random() * 10000
       $ "Getting dummy suits %d", r

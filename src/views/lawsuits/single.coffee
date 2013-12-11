@@ -47,9 +47,6 @@ module.exports = renderable (data) ->
                   li =>
                     i class: "fa-li fa fa-user"
                     a href: "#", party.subject.name.full
-
-
-          # attorneys = _.groupBy parties, "attorneys"
             
 
         # form
@@ -79,6 +76,16 @@ module.exports = renderable (data) ->
           =>
             i class: "fa fa-edit"
             text " " + "zmień dane"
+
+        do hr
+
+        if @prev? then a class: "btn btn-link", href: "/suits/#{@prev.repository}/#{@prev.year}/#{@prev.number}", =>
+          i class: "fa fa-arrow-left"
+          text " " + @prev.reference_sign
+        
+        if @next? then a class: "btn btn-link pull-right", href: "/suits/#{@next.repository}/#{@next.year}/#{@next.number}", =>
+          text @next.reference_sign + " "
+          i class: "fa fa-arrow-right"
 
         # button 
         #   type  : "button"
