@@ -96,10 +96,15 @@ get_lawsuits = (req, res) ->
     years       : (done) ->
       if res.locals.conditions?.year       then return done null, []
 
-      Lawsuit.aggregate
-        # $match: res.locals.conditions or {}
-        $group: _id: "$year", total: $sum: 1
-        done
+      spec = $group: _id: "$year", total: $sum: 1
+      if res.locals.conditions?.repository then spec = [
+        $match: res.locals.conditions
+        spec
+      ]
+      
+      $ "Spec is %j", spec
+        
+      Lawsuit.aggregate spec, done
     
     count       : (done) -> Lawsuit.count res.locals.conditions, done
     
