@@ -15,22 +15,46 @@ debug   = require "debug"
 
 $       = debug "microserver"
 
-app.get "/", (req, res) ->
+pkg     = require "../package.json"
+
+engine  =
+  name:     "Microserver"
+  version:  pkg.version
+  repo:     pkg.repo
+
+author = pkg.author.match ///
+  ^
+  \s*
+  ([^<\(]+)     # name
+  \s+
+  (?:<(.*)>)?   # e-mail
+  \s*
+  (?:\((.*)\))? # website
+  \s*
+///
+engine.author =
+    name    : do author[1]?.trim
+    email   : do author[2]?.trim
+    website : do author[3]?.trim
+
+app.use (req, res, next) ->
+  # Set default values for res.locals
+  res.locals
+    title   : "Mikroserver"
+    subtitle: "Mikrosekcja daje radę."
+    icon    : "fighter-jet"
+    engine  : engine
+
+  do next
+
+app.get "/", (req, res) -> res.redirect "/lawsuits"
+
+get_lawsuits = (req, res) ->
 
   { query } = req.query
 
-  # if query then conditions = 
-  #   $or:
-  #     number  : query
-  #     parties : name: $or:
-  #       first   : new RegExp query
-  #       last    : new RegExp query
-  #     parties : attorneys: name: $or
-  #       first   : new RegExp query
-  #       last    : new RegExp query
-
   async.parallel
-    lawsuits: (done) -> async.waterfall [
+    lawsuits    : (done) -> async.waterfall [
       # Prepare conditions
       # Find matching subjects
       (done) ->
@@ -53,7 +77,7 @@ app.get "/", (req, res) ->
         if not done and typeof subjects is "function" then done = subjects
         if not query then return done null
 
-        Lawsuit.find()
+        Lawsuit.find(res.locals.conditions)
         .or("parties.attorneys": $in: subjects)
         .or("parties.subject": $in: subjects)
         .or("claims.value": new RegExp query, "i")
@@ -62,26 +86,57 @@ app.get "/", (req, res) ->
         .populate("parties.attorneys")
         .exec done
     ], done
+
+    repositories: (done) ->
+      if res.locals.conditions?.repository then return done null, []
+      Lawsuit.aggregate
+        $group: _id: "$repository", total: $sum: 1
+        done
+
+    years       : (done) ->
+      if res.locals.conditions?.year       then return done null, []
+
+      Lawsuit.aggregate
+        # $match: res.locals.conditions or {}
+        $group: _id: "$year", total: $sum: 1
+        done
     
-    count   : (done) -> Lawsuit.count done
+    count       : (done) -> Lawsuit.count res.locals.conditions, done
     
     (error, data) ->
       if error then throw error
 
       res.locals data
       res.locals { query }
-      res.locals
-        title: "Mikroserver"
-        page :
-          title : "Mikrosekcja daje radę."
-          icon  : "fighter-jet"
 
-      template = require "./views/index"
-      res.send template.call res.locals
+      template = require "./views/lawsuits/list"
+      res.send template res.locals
 
 
+app.get "/lawsuits", get_lawsuits
 
-app.get "/suits/:repository/:year/:number", (req, res) ->
+app.get "/lawsuits/:repository", (req, res, next) ->
+  res.locals.conditions = repository: req.params.repository
+  res.locals.repository = req.params.repository
+  do next
+
+app.get "/lawsuits/:repository", get_lawsuits
+
+app.get "/lawsuits/:repository/:year", (req, res, next) ->
+  res.locals.conditions =
+    repository: req.params.repository
+    year      : req.params.year
+
+  res.locals
+    repository: req.params.repository
+    year      : req.params.year
+
+  do next
+
+app.get "/lawsuits/:repository/:year", get_lawsuits
+
+
+app.get "/lawsuits/:repository/:year/:number", (req, res) ->
   conditions = _.pick req.params, ["repository", "year", "number"]
   
 
@@ -158,8 +213,9 @@ app.get "/suits/:repository/:year/:number", (req, res) ->
       $ "Error %j", error
       if error.message is "Not found" then return res.send "<strong>Wow! 404</strong><br />We have 40 000 lawsuits, but this one is missing. Sorry :P"
       else throw error
+
     template = require "./views/lawsuits/single"
-    res.send template.call res.locals
+    res.send template res.locals
 
 mongoose.connect "mongodb://localhost/test"
 app.listen 31337
