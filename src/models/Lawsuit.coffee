@@ -1,9 +1,15 @@
 mongoose = require "mongoose"
 
 lawsuit = new mongoose.Schema
-  repository: String
-  year      : Number
-  number    : Number
+  repository: 
+    type      : String
+    index     : yes
+  year      : 
+    type      : Number
+    index     : yes
+  number    : 
+    type      : Number
+    index     : yes
   file_date : Date
   parties   : [
     subject   :
