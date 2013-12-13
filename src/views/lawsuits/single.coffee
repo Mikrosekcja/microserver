@@ -64,9 +64,14 @@ module.exports = new View (data) ->
         #       @p class: "text-center text-muted", => @i class: "fa fa-ellipsis-h fa-2x"
 
             # @div class: "form-group", =>
+        @dialog id: "reference_sign_dialog", title: "Urra!", -> @p "Hello!"
+
         @button
           class: "btn btn-block btn-primary btn-lg"
-          type: "submit"
+          type: "button"
+          data:
+            toggle: "modal"
+            target: "#reference_sign_dialog"
           =>
             @i class: "fa fa-edit"
             @text " " + "zmień dane"
