@@ -140,10 +140,9 @@ app.get "/lawsuits/:repository/:year", (req, res, next) ->
 
 app.get "/lawsuits/:repository/:year", get_lawsuits
 
-
+# A single lawsuit
 app.get "/lawsuits/:repository/:year/:number", (req, res) ->
   conditions = _.pick req.params, ["repository", "year", "number"]
-  
 
   async.series [
     # Find this lawsuit
@@ -164,7 +163,8 @@ app.get "/lawsuits/:repository/:year/:number", (req, res) ->
               icon  : "folder-o"
 
           done null
-    # Find next and previous lawsuit
+    
+    # Find next and previous lawsuits and some other things
     (done) ->
       {
         number
@@ -192,31 +192,21 @@ app.get "/lawsuits/:repository/:year/:number", (req, res) ->
             .sort(number: -1)
             .limit(1)
             .exec (error, lawsuits) -> done error, lawsuits[0]
+
+        repositories: (done) -> Lawsuit.distinct "repository", done
+        claim_types : (done) -> Lawsuit.distinct "claims.type", done
+        count       : (done) -> Lawsuit.count done
         
-        (error, lawsuits) ->
+        (error, data) ->
           if error then return done error
-          $ "%j", lawsuits
-          res.locals lawsuits
-          done null
-
-    (done) ->
-      r = Math.floor Math.random() * 10000
-      $ "Getting dummy suits %d", r
-      Lawsuit.find()
-        .skip(r)
-        .limit(10)
-        .populate("parties.subject")
-        .exec (error, lawsuits) ->
-          if error then return done error
-          
-          res.locals { lawsuits }
-
+          $ "%j", data
+          res.locals data
           done null
 
   ], (error) ->
     if error?
       $ "Error %j", error
-      if error.message is "Not found" then return res.send "<strong>Wow! 404</strong><br />We have 40 000 lawsuits, but this one is missing. Sorry :P"
+      if error.message is "Not found" then return res.send "<strong>404 &times Congratulations!</strong><br />We have more then 40 000 lawsuits, but this one is missing. Sorry :P"
       else throw error
 
     template = require "./views/lawsuits/single"
