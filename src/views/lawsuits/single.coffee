@@ -1,23 +1,17 @@
 debug   = require "debug"
-$       = debug "microserver:views:index"
+$       = debug "microserver:views:lawsuit"
 
 _       = require "lodash"
 
-teacup  = require "teacup"
 layout  = require "../layouts/default"
-view    = teacup.renderable (data, options = {}) -> 
-  _.defaults options,
-    _.pick data, [
-      "title"
-      "subtitle"
-      "icon"
-      "engine"
-    ]
+View    = require "../View"
 
-  options.subtitle  = "Lawsuit"
-  options.icon      = "folder-open-o"
+module.exports = new View (data) -> 
 
-  layout options, =>
+  data.subtitle  = "Lawsuit"
+  data.icon      = "folder-open-o"
+
+  layout data, =>
     @div class: "row", =>
       @tag "main", class: "col-xs-12 col-sm-9", =>
         @h3 "Roszczenia"
@@ -131,5 +125,3 @@ view    = teacup.renderable (data, options = {}) ->
                 for claim in suit.claims
                   if claim.type is "Uznanie postanowienia wzorca umowy za niedozwolone"
                     @small => @pre style: "overflow: hidden; max-height: 100px; font-size: 80%", claim.value
-
-module.exports = view.bind teacup

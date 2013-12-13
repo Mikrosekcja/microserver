@@ -1,25 +1,22 @@
 debug   = require "debug"
 $       = debug "microserver:views:index"
 
-teacup  = require "teacup"
 _       = require "lodash"
 
+View    = require "../View"
 layout  = require "../layouts/default"
-view    = teacup.renderable (data, options = {}) -> 
-  _.defaults options,
-    _.pick data, [
-      "title"
-      "subtitle"
-      "icon"
-      "engine"
-    ]
 
-    options.title     = ((data.repository or "") + " " + (data.year or "")).trim() or "Lawsuits"
-    options.subtitle  = "We have #{data.count} of them ATM."
-    options.icon      = if data.year? then "calendar" else if data.repository? then "archive" else "book"
-                        
+module.exports = new View (data) -> 
 
-  layout options, => 
+  # Setup some data before we pass it to layout
+  # It could be argued that this kind of stuff belongs to controller,
+  # but I believe it is so view related that it should go here.
+
+  data.title     = ((data.repository or "") + " " + (data.year or "")).trim() or "Lawsuits"
+  data.subtitle  = "We have #{data.count} of them ATM."
+  data.icon      = if data.year? then "calendar" else if data.repository? then "archive" else "book"                        
+
+  layout data, -> 
     @div class: "row", style: "margin-bottom: 15px", -> @div class: "col-xs-12 col-sm-12", ->
       @form
         method: "get"
@@ -104,4 +101,3 @@ view    = teacup.renderable (data, options = {}) ->
                   if claim.type is "Uznanie postanowienia wzorca umowy za niedozwolone"
                     @small => @pre style: "overflow: hidden; max-height: 100px; font-size: 80%", claim.value
 
-module.exports = view.bind teacup

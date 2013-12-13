@@ -1,18 +1,20 @@
 debug   = require "debug"
 $       = debug "microserver:views:layouts:default"
 
-teacup = require "teacup"
+View    = require "../View"
 
-layout = teacup.renderable (options, content) -> 
-  if not content and typeof options is "function"
-    content = options
-  @scripts  ?= []
-  @styles   ?= []
+module.exports = new View (data, content) -> 
+  $ "Running default layout"
+  if not content and typeof data is "function"
+    content = data
+  
+  data.scripts  ?= []
+  data.styles   ?= []
 
   @doctype 5
   @html =>
     @head =>
-      @title options.title
+      @title data.title
       @meta charset: "utf-8"
       @meta name: "viewport", content: "width=device-width, initial-scale=1.0"
 
@@ -22,19 +24,19 @@ layout = teacup.renderable (options, content) ->
       ]
         
 
-    @body data: csrf: options._csrf, =>
+    @body data: csrf: data._csrf, =>
       @div class: "container", id: "content", =>
         @header class : "page-header", =>
           @h1 =>
-            @i class: "fa fa-" + options.icon if options.icon?
-            @text " " + options.title + " "
+            @i class: "fa fa-" + data.icon if data.icon?
+            @text " " + data.title + " "
             @br class: "visible-xs visible-sm"
-            @small options.subtitle
+            @small data.subtitle
 
-        do content
+        content.call @
         
       @footer class: "container", =>
-        { engine } = options
+        { engine } = data
         @small =>
           @i class: "fa fa-bolt"
           @text " powered by "
@@ -62,8 +64,8 @@ layout = teacup.renderable (options, content) ->
         "//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.3.1/jquery.cookie.min.js"
         "https://login.persona.org/include.js"
         "/js/authenticate.js"
-      ].concat options.scripts or []
+      ].concat data.scripts or []
 
-      link rel: "stylesheet", href: url for url in options.styles or []
+      link rel: "stylesheet", href: url for url in data.styles or []
 
-module.exports = layout.bind teacup
+

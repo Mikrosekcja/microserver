@@ -1,5 +1,5 @@
-PATH:=./node_modules/.bin/:$(PATH)
-BROWSERIFY := $(shell cat .browserify | sed 's/.*/-r & /g')
+PATH			:=./node_modules/.bin/:$(HOME)/.npm-packages/bin/:$(PATH)
+BROWSERIFY:= $(shell cat .browserify | sed 's/.*/-r & /g')
 
 # $(for package in $(cat .browserify); do echo -n " -r $package"; done)
 all: install build test start
