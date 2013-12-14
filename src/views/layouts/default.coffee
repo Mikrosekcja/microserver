@@ -66,6 +66,6 @@ module.exports = new View (data, content) ->
         "/js/authenticate.js"
       ].concat data.scripts or []
 
-      link rel: "stylesheet", href: url for url in data.styles or []
+      @link rel: "stylesheet", href: url for url in data.styles or []
 
 

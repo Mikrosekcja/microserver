@@ -1,28 +1,22 @@
 if not module.parent then do (require "source-map-support").install
 
-express = require "express"
-app     = express()
+express   = require "express"
+_         = require "lodash"
+async     = require "async"
+mongoose  = require "mongoose" 
+debug     = require "debug"
 
-mongoose = require "mongoose" 
+app       = express()
+$         = debug "microserver"
 
-Lawsuit = require "./models/Lawsuit"
-Subject = require "./models/Subject"
+pkg       = require "../package.json"
 
-_       = require "lodash"
-async   = require "async"
-
-debug   = require "debug"
-
-$       = debug "microserver"
-
-pkg     = require "../package.json"
-
-engine  =
+engine    =
   name:     "Microserver"
   version:  pkg.version
   repo:     pkg.repo
 
-author = pkg.author.match ///
+author    = pkg.author.match ///
   ^
   \s*
   ([^<\(]+)     # name
@@ -33,9 +27,22 @@ author = pkg.author.match ///
   \s*
 ///
 engine.author =
-    name    : do author[1]?.trim
-    email   : do author[2]?.trim
-    website : do author[3]?.trim
+  name    : do author[1]?.trim
+  email   : do author[2]?.trim
+  website : do author[3]?.trim
+
+app.use do express.favicon
+app.use '/js', express.static 'assets/scripts/app'
+app.use '/scripts', express.static 'scripts' # Coffeescript sources for debug
+app.use '/js', express.static 'assets/scripts/vendor'
+
+app.use '/css', express.static 'assets/styles/app'
+app.use '/css', express.static 'assets/styles/vendor'
+
+app.use do express.bodyParser
+app.use do express.cookieParser
+app.use express.session secret: (app.get "site")?.secret or "Zdradzę wam dzisiaj potworny sekret. Jestem ciasteczkowym potworem!"
+app.use do express.methodOverride
 
 app.use (req, res, next) ->
   # Set default values for res.locals
@@ -49,168 +56,18 @@ app.use (req, res, next) ->
 
 app.get "/", (req, res) -> res.redirect "/lawsuits"
 
-get_lawsuits = (req, res) ->
+lawsuits = require "./controllers/lawsuits"
+app.get route, lawsuits.list for route in [
+  "/lawsuits"
+  "/lawsuits/:repository"
+  "/lawsuits/:repository/:year"
+]
+app.get "/lawsuits/:repository/:year/:number", lawsuits.single
+app.put "/lawsuits/:repository/:year/:number", lawsuits.update
 
-  { query } = req.query
-
-  async.parallel
-    lawsuits    : (done) -> async.waterfall [
-      # Prepare conditions
-      # Find matching subjects
-      (done) ->
-        if not query then return done null
-
-        Subject.find()
-        .or("name.last": new RegExp query, "i")
-        .or("name.first": new RegExp query, "i")
-        # .or ([
-        #   "name.first": new RegExp query
-        # ,
-        #   "name.last": new RegExp query 
-        # ])
-        .limit(100)
-        .select("_id")
-        .exec done
-
-      # Find matching lawsuits
-      (subjects, done) ->
-        if not done and typeof subjects is "function" then done = subjects
-        if not query then return done null
-
-        Lawsuit.find(res.locals.conditions)
-        .or("parties.attorneys": $in: subjects)
-        .or("parties.subject": $in: subjects)
-        .or("claims.value": new RegExp query, "i")
-        .limit(100)
-        .populate("parties.subject")
-        .populate("parties.attorneys")
-        .exec done
-    ], done
-
-    repositories: (done) ->
-      if res.locals.conditions?.repository then return done null, []
-      Lawsuit.aggregate
-        $group: _id: "$repository", total: $sum: 1
-        done
-
-    years       : (done) ->
-      if res.locals.conditions?.year       then return done null, []
-
-      spec = $group: _id: "$year", total: $sum: 1
-      if res.locals.conditions?.repository then spec = [
-        $match: res.locals.conditions
-        spec
-      ]
-      
-      $ "Spec is %j", spec
-        
-      Lawsuit.aggregate spec, done
-    
-    count       : (done) -> Lawsuit.count res.locals.conditions, done
-    
-    (error, data) ->
-      if error then throw error
-
-      res.locals data
-      res.locals { query }
-
-      template = require "./views/lawsuits/list"
-      res.send template res.locals
-
-
-app.get "/lawsuits", get_lawsuits
-
-app.get "/lawsuits/:repository", (req, res, next) ->
-  res.locals.conditions = repository: req.params.repository
-  res.locals.repository = req.params.repository
-  do next
-
-app.get "/lawsuits/:repository", get_lawsuits
-
-app.get "/lawsuits/:repository/:year", (req, res, next) ->
-  res.locals.conditions =
-    repository: req.params.repository
-    year      : req.params.year
-
-  res.locals
-    repository: req.params.repository
-    year      : req.params.year
-
-  do next
-
-app.get "/lawsuits/:repository/:year", get_lawsuits
-
-# A single lawsuit
-app.get "/lawsuits/:repository/:year/:number", (req, res) ->
-  conditions = _.pick req.params, ["repository", "year", "number"]
-
-  async.series [
-    # Find this lawsuit
-    (done) ->
-      $ "Getting %j", conditions
-      Lawsuit.findOne(conditions)
-        .populate("parties.subject")
-        .populate("parties.attorneys")
-        .exec (error, lawsuit) ->
-          if error then return done error
-          if not lawsuit then return done Error "Not found"
-          
-          res.locals { lawsuit }
-          res.locals
-            title: lawsuit.reference_sign
-            page :
-              title : "Lawsuit"
-              icon  : "folder-o"
-
-          done null
-    
-    # Find next and previous lawsuits and some other things
-    (done) ->
-      {
-        number
-        year
-        repository
-      } = res.locals.lawsuit
-
-      async.parallel
-        next: (done) ->
-          Lawsuit.find(
-              repository: repository
-              year      : year
-              number    : $gt: number
-            )
-            .sort(number: 1)
-            .limit(1)
-            .exec (error, lawsuits) -> done error, lawsuits[0]
-
-        prev: (done) ->
-          Lawsuit.find(
-              repository: repository
-              year      : year
-              number    : $lt: number
-            )
-            .sort(number: -1)
-            .limit(1)
-            .exec (error, lawsuits) -> done error, lawsuits[0]
-
-        repositories: (done) -> Lawsuit.distinct "repository", done
-        claim_types : (done) -> Lawsuit.distinct "claims.type", done
-        count       : (done) -> Lawsuit.count done
-        
-        (error, data) ->
-          if error then return done error
-          $ "%j", data
-          res.locals data
-          done null
-
-  ], (error) ->
-    if error?
-      $ "Error %j", error
-      if error.message is "Not found" then return res.send "<strong>404 &times Congratulations!</strong><br />We have more then 40 000 lawsuits, but this one is missing. Sorry :P"
-      else throw error
-
-    template = require "./views/lawsuits/single"
-    res.send template res.locals
+subjects = require "./controllers/subjects"
+app.get "/subjects", subjects.list
+app.get "/subjects/:subject_id", subjects.single
 
 mongoose.connect "mongodb://localhost/test"
 app.listen 31337

@@ -33,6 +33,13 @@ lawsuit = new mongoose.Schema
   #     ref       : "Employee"
   # ]
 
+lawsuit.index {
+    repository: 1
+    year      : 1
+    number    : 1
+  }, unique: true
+
+# TODO: db.lawsuits.aggregate([{$group: {_id: {repo: "$repository", y: "$year", n: "$number"}, num: {$sum: 1}}}, {$match: {num: {$gt: 1}}}])
 
 
 lawsuit.virtual("reference_sign")

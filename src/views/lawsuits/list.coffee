@@ -23,7 +23,7 @@ module.exports = new View (data) ->
         =>
           @div class: "input-group input-group-lg", =>
             @input
-              type        : "text"
+              type        : "search"
               class       : "form-control"
               placeholder : "We have #{data.count} lawsuits in our shop. What are you looking for?"
               name        : "query"

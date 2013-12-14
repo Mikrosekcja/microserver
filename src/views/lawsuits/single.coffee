@@ -10,6 +10,11 @@ module.exports = new View (data) ->
 
   data.subtitle  = "Lawsuit"
   data.icon      = "folder-open-o"
+  data.scripts  ?= []
+  data.scripts.push "//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"
+  data.scripts.push "/js/editables.js"
+  data.styles   ?= []
+  data.styles.push  "//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
 
   layout data, =>
     @div class: "row", =>
@@ -17,7 +22,17 @@ module.exports = new View (data) ->
         @h3 "Roszczenia"
         for claim in data.lawsuit.claims
           @h4 => @small claim.type
-          @pre claim.value
+          @a
+            href: "#"
+            id  : "claim"
+            class: "editable"
+            data:
+              pk    : 1
+              url   : "/"
+              type  : "textarea"
+              title : "Claim value or description"
+            claim.value
+          
 
         do @hr
         @h3 "Strony"
@@ -25,46 +40,91 @@ module.exports = new View (data) ->
         for role, parties of roles
           @div class: "panel panel-default", => @div class: "panel-body", =>
             @h4 role
-            attorneys = _.groupBy parties, (party) =>
-              $ "Grouping by attorneys"
+            groups = _.groupBy parties, (party) =>
               if not party.attorneys? then return ""
               names = (attorney.name.full for attorney in party.attorneys).join ", "
-              $ "Reduced names are %j", names
               names
 
-            @ul class: "fa-ul", => for attorney, parties of attorneys
+            @ul class: "fa-ul", => for name, parties of groups
               @li => 
-                if attorney 
+                if name
                   @i class: "fa fa-li fa-briefcase"
-                  @strong attorney
+                  attorneys = _(parties).pluck("attorneys").flatten().uniq("_id").value()                  
+                  @strong -> for attorney in attorneys
+                    @a href: "/subjects/#{attorney._id}", attorney.name.full
+                    @text " "
+
                 @ul class: "fa-ul", => for party in parties
                   @li =>
                     @i class: "fa-li fa fa-user"
-                    @a href: "#", party.subject.name.full
+                    @a href: "/subjects/#{party.subject._id}", party.subject.name.full
             
 
-        # @form
-        #   method: "get"
-        #   class : "form-horizontal"
-        #   =>
-        #     @div class: "form-group", =>
-        #       @label
-        #         for   : "date"
-        #         class : "col-sm-6"
-        #         "Submission date"
-        #       @div class: "col-sm-6", =>
-        #         @input 
-        #           id    : "date"
-        #           value : data.lawsuit.file_date
-        #           name  : "date"
-        #           type  : "text"
-        #           class : "form-control"
+        @dialog id: "reference_sign_dialog", title: "Urra!", -> 
+          @form
+            method: "POST"
+            class : "form-inline"
+            role  : "form"
+            =>
+              @input type: "hidden", name: "_method", value: "PUT"
 
-        #     @div class: "form-group", =>
-        #       @p class: "text-center text-muted", => @i class: "fa fa-ellipsis-h fa-2x"
+              @div class: "form-group", =>
+                @label
+                  class : "sr-only"
+                  for   : "repository"
+                  "Repository"
+                @select
+                  id    : "repository"
+                  name  : "repository"
+                  class : "form-control"
+                  ->
+                    @option selected: data.lawsuit.repository is repository, repository for repository in data.repositories
 
-            # @div class: "form-group", =>
-        @dialog id: "reference_sign_dialog", title: "Urra!", -> @p "Hello!"
+              @div class: "form-group", =>
+                @raw "&nbsp;"
+
+              @div class: "form-group", =>
+                @label
+                  class : "sr-only"
+                  for   : "number"
+                  "Number"
+                @input
+                  id    : "number"
+                  name  : "number"
+                  type  : "number"
+                  value : data.lawsuit.number
+                  min   : 0
+                  class : "form-control"
+
+              @div class: "form-group", =>
+                @raw "&nbsp;/&nbsp;"
+
+              @div class: "form-group", =>
+                @label
+                  class : "sr-only"
+                  for   : "year"
+                  "Year"
+                @input
+                  id    : "year"
+                  name  : "year"
+                  type  : "number"
+                  value : data.lawsuit.year
+                  max   : (new Date).getFullYear() + 1
+                  class : "form-control"
+
+              @div class: "form-group", =>
+                @label
+                  class : "sr-only"
+                  for   : "year"
+                  "Year"
+                @button
+                  type  : "submit"
+                  class : "btn btn-primary"
+                  ->
+                    @i class: "fa fa-check-square"
+
+
+
 
         @button
           class: "btn btn-block btn-primary btn-lg"
