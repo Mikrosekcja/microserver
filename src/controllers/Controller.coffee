@@ -6,7 +6,7 @@ $       = debug "microserver:Controller"
 
 class Controller
   constructor : (@options = {}) ->
-    
+
     _(@options).defaults
       routes  : {}
       actions : {}
@@ -15,11 +15,13 @@ class Controller
     @actions  = @options.actions
 
     # Root directory for controller's modules (see below)
-    directory   = @options.root or
-                  if module.parent? then path.dirname module.parent?.filename else __dirname
+    directory   = @options.directory or
+                  path.resolve require.main.filename, "..", "controllers/", @options.name
 
     for name, route of @routes
       # Route can be provided in canonical form as hash: {method: "GET", url: "/foos/:foo_id"} ...
+      # URL can be an array of strings for multiple paths
+
       if typeof route is "object"
         {
           method
@@ -32,13 +34,27 @@ class Controller
           method
           url
         ] = route.split /\s+/
-      if not (
-        method  and typeof method is "string" and
-        url     and typeof url    is "string"
-      ) then throw Error "Invalid route for action '#{name}'"
+
+      method  = method.toLowerCase()
+      if not method in [
+        "get"
+        "post"
+        "put"
+        "delete"
+      ] then throw Error """
+        Invalid method (#{method}) for action '#{name}'
+        Method must be one of 'GET', 'POST', 'PUT', 'DELETE'
+      """
+
+      # In canonical form url is an array of strings, usually one :)
+      if typeof url is "string" then url = [ url ]
+      if _.isArray url then url = _.filter url, (e) -> typeof e is "string"
+      if not url.length then throw Error """
+        Invalid URL for action '#{name}'
+        URL must be a string or array of strings.
+      """
 
       # Lets cast it to canonical form
-      method  = method.toLowerCase()
       route   = {
         method
         url
@@ -51,7 +67,7 @@ class Controller
       if typeof @actions[name] is "function" then @actions[name] = @actions[name].bind @
       else
         module_path = path.resolve directory, name
-        $ "Loading function for %s (%s %s) from %s", name, method, url, module_path
+        $ "Loading function for %s (%s %j) from %s", name, method, url, module_path
         @actions[name]  = (require module_path).bind @
     
   plugInto    : (app) ->
@@ -61,7 +77,8 @@ class Controller
         method
         url
       } = route
-      $ "Plugging %s into app.%s %s", name, method, url
-      app[method.toLowerCase()] url, @actions[name]
+      for single_url in url
+        $ "Plugging %s into app.%s %s", name, method, single_url
+        app[method] single_url, @actions[name]
       
 module.exports = Controller

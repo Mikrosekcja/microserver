@@ -57,18 +57,10 @@ app.use (req, res, next) ->
 app.get "/", (req, res) -> res.redirect "/lawsuits"
 
 lawsuits = require "./controllers/lawsuits"
-app.get route, lawsuits.list for route in [
-  "/lawsuits"
-  "/lawsuits/:repository"
-  "/lawsuits/:repository/:year"
-]
-app.get "/lawsuits/:repository/:year/:number", lawsuits.single
-app.put "/lawsuits/:repository/:year/:number", lawsuits.update
+lawsuits.plugInto app
 
 subjects = require "./controllers/subjects"
 subjects.plugInto app
-# app.get "/subjects", subjects.list
-# app.get "/subjects/:subject_id", subjects.single
 
 mongoose.connect "mongodb://localhost/test"
 app.listen 31337

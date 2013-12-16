@@ -1,7 +1,5 @@
 View = require "../View"
 
-console.dir View
-
 module.exports = new View (options, content) ->
   @div
     class   : "modal fade"

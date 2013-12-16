@@ -4,7 +4,6 @@ $       = debug "microserver:views:layouts:default"
 View    = require "../View"
 
 module.exports = new View (data, content) -> 
-  $ "Running default layout"
   if not content and typeof data is "function"
     content = data
   

@@ -1,11 +1,15 @@
+# Subjects controller
+# ===================
+
+
 debug       = require "debug"
 Controller  = require "../Controller"
 
 $           = debug "microserver:controllers:subjects"
 
-
-
+$ "Loading..."
 module.exports = new Controller
+  name    : "subjects"
   routes  :
     list    : "GET    /subjects"
     new     : "POST   /subjects"
