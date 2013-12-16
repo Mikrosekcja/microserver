@@ -66,8 +66,9 @@ app.get "/lawsuits/:repository/:year/:number", lawsuits.single
 app.put "/lawsuits/:repository/:year/:number", lawsuits.update
 
 subjects = require "./controllers/subjects"
-app.get "/subjects", subjects.list
-app.get "/subjects/:subject_id", subjects.single
+subjects.plugInto app
+# app.get "/subjects", subjects.list
+# app.get "/subjects/:subject_id", subjects.single
 
 mongoose.connect "mongodb://localhost/test"
 app.listen 31337
