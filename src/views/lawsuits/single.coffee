@@ -11,10 +11,11 @@ module.exports = new View (data) ->
   data.subtitle  = "Lawsuit"
   data.icon      = "folder-open-o"
   data.scripts  ?= []
-  data.scripts.push "//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"
-  data.scripts.push "/js/editables.js"
-  data.styles   ?= []
-  data.styles.push  "//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
+  # data.scripts.push "/js/editables.js"
+  data.scripts.push "/js/ajaxify.js"
+  data.scripts.push "/js/selects.js"
+  data.scripts.push "//cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.min.js"
+
 
   layout data, =>
     @div class: "row", =>
@@ -22,20 +23,12 @@ module.exports = new View (data) ->
         @h3 "Roszczenia"
         for claim in data.lawsuit.claims
           @h4 => @small claim.type
-          @a
-            href: "#"
-            id  : "claim"
-            class: "editable"
-            data:
-              pk    : 1
-              url   : "/"
-              type  : "textarea"
-              title : "Claim value or description"
-            claim.value
+          @pre claim.value
           
 
         do @hr
         @h3 "Strony"
+
         roles = _.groupBy data.lawsuit.parties, "role"
         for role, parties of roles
           @div class: "panel panel-default", => @div class: "panel-body", =>
@@ -58,9 +51,97 @@ module.exports = new View (data) ->
                   @li =>
                     @i class: "fa-li fa fa-user"
                     @a href: "/subjects/#{party.subject._id}", party.subject.name.full
-            
+                    @a 
+                      class : "btn btn-link"
+                      href  : "#"
+                      data  :
+                        ajax  : true
+                        type  : "POST"
+                        data  : JSON.stringify
+                          _method : "PUT"
+                          $pull   : parties: _id: party.id
+                      -> @i class: "fa fa-minus-square"
 
-        @dialog id: "reference_sign_dialog", title: "Urra!", -> 
+        @a
+          class : "btn btn-link"
+          href: "#"
+          data:
+            toggle: "modal"
+            target: "#add-party"
+          -> 
+            @i class: "fa fa-plus-square"
+            @text " " + "Add party"
+
+        @dialog id: "add-party", title: "Add party to this lawsuit", -> 
+          @form
+            method: "POST"
+            class : "form-inline"
+            role  : "form"
+            ->
+              @input type: "hidden", name: "_method", value: "PUT"
+
+              @div class: "form-group", =>
+                @label
+                  class : "sr-only"
+                  for   : "role"
+                  "Role"
+                @select
+                  id    : "role"
+                  name  : "role"
+                  class : "form-control"
+                  ->
+                    @option role for role in data.roles
+
+              @div class: "form-group", =>
+                @raw "&nbsp;"
+
+              @div class: "form-group", =>
+                @label
+                  class : "sr-only"
+                  for   : "subject"
+                  "Party"
+                @select
+                  id    : "subject"
+                  name  : "subject"
+                  class : "form-control"
+                  data  :
+                    select: "true"
+                    url   : "/subjects"
+
+              @div class: "form-group", =>
+                @raw "&nbsp;"
+
+              @div class: "form-group", =>
+                @label
+                  class : "sr-only"
+                  for   : "attorney"
+                  "Attorney"
+                @select
+                  id    : "Attorney"
+                  name  : "Attorney"
+                  class : "form-control"
+
+              @div class: "form-group", =>
+                @button
+                  type  : "submit"
+                  class : "btn btn-primary"
+                  ->
+                    @i class: "fa fa-check-square"
+
+
+
+
+        @button
+          class: "btn btn-block btn-lg"
+          type: "button"
+          data:
+            toggle: "modal"
+            target: "#reference_sign_dialog"
+          =>
+            @i class: "fa fa-edit"
+            @text " " + "Edit"
+
+        @dialog id: "reference_sign_dialog", title: "Change lawsuit reference sign", -> 
           @form
             method: "POST"
             class : "form-inline"
@@ -123,19 +204,6 @@ module.exports = new View (data) ->
                   ->
                     @i class: "fa fa-check-square"
 
-
-
-
-        @button
-          class: "btn btn-block btn-primary btn-lg"
-          type: "button"
-          data:
-            toggle: "modal"
-            target: "#reference_sign_dialog"
-          =>
-            @i class: "fa fa-edit"
-            @text " " + "zmień dane"
-
         do @hr
 
         if data.prev? then @a class: "btn btn-link", href: "/lawsuits/#{data.prev.repository}/#{data.prev.year}/#{data.prev.number}", =>
@@ -145,6 +213,8 @@ module.exports = new View (data) ->
         if data.next? then @a class: "btn btn-link pull-right", href: "/lawsuits/#{data.next.repository}/#{data.next.year}/#{data.next.number}", =>
           @text data.next.reference_sign + " "
           @i class: "fa fa-arrow-right"
+
+        
 
         # @button 
         #   type  : "button"

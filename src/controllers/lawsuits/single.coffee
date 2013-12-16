@@ -61,6 +61,7 @@ module.exports = (req, res) ->
 
         repositories: (done) -> Lawsuit.distinct "repository", done
         claim_types : (done) -> Lawsuit.distinct "claims.type", done
+        roles       : (done) -> Lawsuit.distinct "parties.role", done
         count       : (done) -> Lawsuit.count done
         
         (error, data) ->

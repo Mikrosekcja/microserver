@@ -15,6 +15,8 @@ module.exports = (req, res) ->
       "year"
       "number"
       "parties"
+      "$pull"
+      "$addToSet"
     ]
     # And where
     conditions = _.pick req.params, [
@@ -37,4 +39,7 @@ module.exports = (req, res) ->
         number
       } = lawsuit
 
-      res.redirect "/lawsuits/#{repository}/#{year}/#{number}"
+      if req.accepts ["html", "json"] is "json"
+        res.json lawsuit
+      else
+        res.redirect "/lawsuits/#{repository}/#{year}/#{number}"
