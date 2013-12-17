@@ -6,7 +6,9 @@ _       = require "lodash"
 View    = require "../View"
 layout  = require "../layouts/default"
 
-module.exports = new View (data) -> 
+module.exports = new View
+  helpers: __dirname + "/../helpers"
+  (data) -> 
 
   # Setup some data before we pass it to layout
   # It could be argued that this kind of stuff belongs to controller,

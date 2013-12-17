@@ -22,7 +22,9 @@ module.exports = (req, res) ->
       "number"
     ]
 
+    if not data.subject then return res.send "ERROR: No subject provided." # TODO: Rise an error and handle it later
     $ "Adding party %j to %j", data, conditions
+
 
     Lawsuit.findOneAndUpdate conditions, $addToSet: parties: data, (error, lawsuit) ->
       if error then error

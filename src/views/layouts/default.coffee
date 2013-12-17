@@ -20,8 +20,7 @@ module.exports = new View (data, content) ->
       @link rel: "stylesheet", href: url for url in [
         "//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/css/bootstrap.css"
         "//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.min.css"
-      ]
-        
+      ]        
 
     @body data: csrf: data._csrf, =>
       @div class: "container", id: "content", =>
@@ -66,5 +65,15 @@ module.exports = new View (data, content) ->
       ].concat data.scripts or []
 
       @link rel: "stylesheet", href: url for url in data.styles or []
+      @style type: "text/css", """
+        .select2-offscreen,
+        .select2-offscreen:focus {
+          // Keep original element in the same spot
+          // So that HTML5 valiation message appear in the correct position
+          left: auto !important;
+          top: auto !important;
+        }
+      """
+
 
 

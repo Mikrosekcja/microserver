@@ -54,7 +54,7 @@ module.exports = new View
               party_entry = @renderable (party) =>
                 @li =>
                   @i class: "fa fa-li fa-user"
-                  @a href: "/subjects/#{party.subject._id}", party.subject.name.full
+                  @a href: "/subjects/#{party.subject?._id}", party.subject?.name.full
                   @a 
                     href  : "#"
                     class : "pull-right"
@@ -118,7 +118,8 @@ module.exports = new View
                     id    : "subject"
                     name  : "subject"
                     class : "form-control"
-                    type  : "hidden"
+                    type  : "text"
+                    required: true
                     data  :
                       select: "true"
                       url   : "/subjects"
@@ -131,7 +132,7 @@ module.exports = new View
                     id    : "attorneys"
                     name  : "attorneys"
                     class : "form-control"
-                    type  : "hidden"
+                    type  : "text"
                     data  :
                       select: "true"
                       url   : "/subjects"
