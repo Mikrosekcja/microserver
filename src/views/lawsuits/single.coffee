@@ -18,7 +18,7 @@ module.exports = new View (data) ->
 
   data.styles   ?= []
   data.styles.push "//cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.css"
-  data.styles.push "//cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2-bootstrap.css"
+  data.styles.push "/css/select2-bootstrap.css"
 
 
   {

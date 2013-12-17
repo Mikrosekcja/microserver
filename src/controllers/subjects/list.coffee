@@ -17,4 +17,6 @@ module.exports = (req, res) ->
     if error then throw error
     res.locals {subjects}
 
+    console.dir subjects
+
     res.json _.extend {}, res.locals

@@ -32,12 +32,12 @@ engine.author =
   website : do author[3]?.trim
 
 app.use do express.favicon
-app.use '/js', express.static 'assets/scripts/app'
+app.use '/js',      express.static 'assets/scripts/app'
 app.use '/scripts', express.static 'scripts' # Coffeescript sources for debug
-app.use '/js', express.static 'assets/scripts/vendor'
+app.use '/js',      express.static 'assets/scripts/vendor'
 
-app.use '/css', express.static 'assets/styles/app'
-app.use '/css', express.static 'assets/styles/vendor'
+app.use '/css',     express.static 'assets/styles/app'
+app.use '/css',     express.static 'assets/styles/vendor'
 
 app.use do express.bodyParser
 app.use do express.cookieParser

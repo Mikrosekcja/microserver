@@ -5,6 +5,9 @@ subject = new mongoose.Schema
     first : String
     last  : String
 
+subject.set "toJSON"  , virtuals: true
+subject.set "toObject", virtuals: true
+
 subject.virtual("name.full")
   .get -> 
     if @name.first then "#{@name.first } #{@name.last}"

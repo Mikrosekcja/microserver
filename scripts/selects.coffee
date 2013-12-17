@@ -20,7 +20,7 @@ jQuery ($) ->
         results : (data)  -> 
           results: data.subjects.map (subject) ->
             id: subject._id
-            text: subject.name.first + " " + subject.name.last
+            text: subject.name.full
         # http://ivaynberg.github.io/select2/
         # Uncaught Error: Option 'ajax' is not allowed for Select2 when attached to a <select> element. 
       }
