@@ -10,12 +10,35 @@ $       = debug "microserver:controllers:lawsuits:list"
 
 module.exports = (req, res) ->
 
-  { query } = req.query
-
   conditions = _.pick req.params, [
     "repository"
     "year"
   ]
+
+  { query } = req.query
+  
+  if match = query?.trim().match /^([a-z]+)\s+([0-9]+)\s*\/\s*(([0-9]{2})?[0-9]{2})$/i
+    conditions.repository = match[1]
+    conditions.number     = Number match[2]
+    conditions.year       = Number if match[4] then match[3] else "20" + match[3]
+
+  if match = query?.trim().match /^([0-9]+)\s*\/\s*(([0-9]{2})?[0-9]{2})$/
+    conditions.number = Number match[1]
+    conditions.year   = Number if match[3] then match[2] else "20" + match[2]
+  if query?.trim().match /^[0-9]+$/ then conditions.number = Number query
+
+  if conditions.repository?
+    original = conditions.repository
+    conditions.repository = new RegExp "^" + conditions.repository + "$", "i"
+    conditions.repository.toString = -> original
+
+  $ "conditions are %j", conditions
+
+  if  conditions.repository? and
+      conditions.year? and
+      conditions.number? then return res.redirect "/lawsuits/#{conditions.repository}/#{conditions.year}/#{conditions.number}"
+      
+
   res.locals { conditions } # This is for monoose queries
   res.locals conditions     # This is to be used in views
   res.locals { query }      # Used here and there :)
@@ -30,11 +53,6 @@ module.exports = (req, res) ->
         Subject.find()
         .or("name.last": new RegExp query, "i")
         .or("name.first": new RegExp query, "i")
-        # .or ([
-        #   "name.first": new RegExp query
-        # ,
-        #   "name.last": new RegExp query 
-        # ])
         .limit(100)
         .select("_id")
         .exec done

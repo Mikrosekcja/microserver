@@ -10,6 +10,7 @@ $       = debug "microserver:controllers:lawsuits:single"
 
 module.exports = (req, res) ->
   conditions = _.pick req.params, ["repository", "year", "number"]
+  conditions.repository = new RegExp "^" + conditions.repository + "$", "i"
 
   async.series [
     # Find this lawsuit
