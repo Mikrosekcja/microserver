@@ -16,6 +16,16 @@ module.exports = new View (data) ->
   data.scripts.push "/js/selects.js"
   data.scripts.push "//cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.min.js"
 
+  data.styles   ?= []
+  data.styles.push "//cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.css"
+  data.styles.push "//cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2-bootstrap.css"
+
+
+  {
+    repository
+    year
+    number
+  } = data.lawsuit
 
   layout data, =>
     @div class: "row", =>
@@ -75,56 +85,52 @@ module.exports = new View (data) ->
         @dialog id: "add-party", title: "Add party to this lawsuit", -> 
           @form
             method: "POST"
-            class : "form-inline"
+            action: "/lawsuits/#{repository}/#{year}/#{number}/parties"
+            class : "form"
             role  : "form"
             ->
-              @input type: "hidden", name: "_method", value: "PUT"
-
               @div class: "form-group", =>
                 @label
-                  class : "sr-only"
                   for   : "role"
                   "Role"
                 @select
                   id    : "role"
                   name  : "role"
                   class : "form-control"
+                  data  : select: "true"
                   ->
                     @option role for role in data.roles
 
               @div class: "form-group", =>
-                @raw "&nbsp;"
-
-              @div class: "form-group", =>
                 @label
-                  class : "sr-only"
                   for   : "subject"
                   "Party"
-                @select
+                @input
                   id    : "subject"
                   name  : "subject"
                   class : "form-control"
+                  type  : "hidden"
                   data  :
                     select: "true"
                     url   : "/subjects"
 
               @div class: "form-group", =>
-                @raw "&nbsp;"
-
-              @div class: "form-group", =>
                 @label
-                  class : "sr-only"
                   for   : "attorney"
                   "Attorney"
-                @select
-                  id    : "Attorney"
-                  name  : "Attorney"
+                @input
+                  id    : "attorneys"
+                  name  : "attorneys"
                   class : "form-control"
+                  type  : "hidden"
+                  data  :
+                    select: "true"
+                    url   : "/subjects"
 
               @div class: "form-group", =>
                 @button
                   type  : "submit"
-                  class : "btn btn-primary"
+                  class : "btn btn-primary btn-block"
                   ->
                     @i class: "fa fa-check-square"
 

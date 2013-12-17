@@ -4,7 +4,7 @@ module.exports = new View (options, content) ->
   @div
     class   : "modal fade"
     id      : options.id
-    tabindex: -1
+    # tabindex: -1
     role    : "dialog"
     ->
       @div class: "modal-dialog", ->
