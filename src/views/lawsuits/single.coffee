@@ -35,7 +35,6 @@ module.exports = new View (data) ->
           @h4 => @small claim.type
           @pre claim.value
           
-
         do @hr
         @h3 "Strony"
 
@@ -44,34 +43,44 @@ module.exports = new View (data) ->
           @div class: "panel panel-default", => @div class: "panel-body", =>
             @h4 role
             groups = _.groupBy parties, (party) =>
-              if not party.attorneys? then return ""
-              names = (attorney.name.full for attorney in party.attorneys).join ", "
-              names
+              if not party.attorneys? then ""
+              else (attorney.name.full for attorney in party.attorneys).join ", "
 
-            @ul class: "fa-ul", => for name, parties of groups
+            singles = groups[""]
+            delete    groups[""]
+
+            console.dir {groups, singles}
+
+            party_entry = @renderable (party) =>
+              @li =>
+                @i class: "fa fa-li fa-user"
+                @a href: "/subjects/#{party.subject._id}", party.subject.name.full
+                @a 
+                  href  : "#"
+                  class : "pull-right"
+                  data  :
+                    ajax  : true
+                    type  : "POST"
+                    data  : JSON.stringify
+                      _method : "PUT"
+                      $pull   : parties: _id: party.id
+                  -> @i class: "fa fa-minus-square"
+
+
+            @ul class: "fa-ul party-groups", => for name, parties of groups
               @li => 
-                if name
-                  @i class: "fa fa-li fa-briefcase"
-                  attorneys = _(parties).pluck("attorneys").flatten().uniq("_id").value()                  
-                  @strong -> for attorney in attorneys
-                    @a href: "/subjects/#{attorney._id}", attorney.name.full
-                    @text " "
+                @i class: "fa fa-li fa-briefcase"
+                attorneys = _(parties).pluck("attorneys").flatten().uniq("_id").value()                  
+                @strong -> for attorney in attorneys
+                  @a href: "/subjects/#{attorney._id}", attorney.name.full
+                  @text " "
 
-                @ul class: "fa-ul", => for party in parties
-                  @li =>
-                    @i class: "fa-li fa fa-user"
-                    @a href: "/subjects/#{party.subject._id}", party.subject.name.full
-                    @a 
-                      class : "btn btn-link"
-                      href  : "#"
-                      data  :
-                        ajax  : true
-                        type  : "POST"
-                        data  : JSON.stringify
-                          _method : "PUT"
-                          $pull   : parties: _id: party.id
-                      -> @i class: "fa fa-minus-square"
+                @ul class: "fa-ul party-group", => party_entry party for party in parties
 
+            if singles? 
+              @ul class: "fa-ul party-singles", -> party_entry party for party in singles
+
+                  
         @a
           class : "btn btn-link"
           href: "#"
