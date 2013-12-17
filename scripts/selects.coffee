@@ -21,8 +21,6 @@ jQuery ($) ->
           results: data.subjects.map (subject) ->
             id: subject._id
             text: subject.name.full
-        # http://ivaynberg.github.io/select2/
-        # Uncaught Error: Option 'ajax' is not allowed for Select2 when attached to a <select> element. 
-      }
-    
+      }    
     else if element.is "select" then do element.select2
+    # TODO: else (no url and not input)
