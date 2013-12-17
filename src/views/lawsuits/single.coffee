@@ -49,8 +49,6 @@ module.exports = new View (data) ->
             singles = groups[""]
             delete    groups[""]
 
-            console.dir {groups, singles}
-
             party_entry = @renderable (party) =>
               @li =>
                 @i class: "fa fa-li fa-user"

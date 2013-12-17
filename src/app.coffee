@@ -14,7 +14,7 @@ pkg       = require "../package.json"
 engine    =
   name:     "Microserver"
   version:  pkg.version
-  repo:     pkg.repo
+  repo:     pkg.repository?.url
 
 author    = pkg.author.match ///
   ^

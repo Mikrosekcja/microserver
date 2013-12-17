@@ -6,6 +6,10 @@
   "scripts": {
     "test": "mocha"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mikrosekcja/microserver"
+  },
   "keywords": [
     "Currenda",
     "Sawa",
