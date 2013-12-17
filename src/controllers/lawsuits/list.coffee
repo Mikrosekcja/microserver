@@ -10,6 +10,7 @@ $       = debug "microserver:controllers:lawsuits:list"
 
 module.exports = (req, res) ->
 
+  # Prepare conditions
   conditions = _.pick req.params, [
     "repository"
     "year"
@@ -44,33 +45,25 @@ module.exports = (req, res) ->
   res.locals { query }      # Used here and there :)
 
   async.parallel
-    lawsuits    : (done) -> async.waterfall [
-      # Prepare conditions
-      # Find matching subjects
-      (done) ->
-        if not query then return done null
+    lawsuits    : (done) -> 
+      if not query then return done null
 
-        Subject.find()
-        .or("name.last": new RegExp query, "i")
-        .or("name.first": new RegExp query, "i")
-        .limit(100)
-        .select("_id")
-        .exec done
-
-      # Find matching lawsuits
-      (subjects, done) ->
-        if not done and typeof subjects is "function" then done = subjects
-        if not query then return done null
-
-        Lawsuit.find(res.locals.conditions)
-        .or("parties.attorneys": $in: subjects)
-        .or("parties.subject": $in: subjects)
+      Lawsuit.find(res.locals.conditions)
         .or("claims.value": new RegExp query, "i")
         .limit(100)
         .populate("parties.subject")
         .populate("parties.attorneys")
         .exec done
-    ], done
+
+    subjects    : (done) ->
+      if not query then return done null
+
+      Subject.find()
+      .or("name.last": new RegExp query, "i")
+      .or("name.first": new RegExp query, "i")
+      .limit(100)
+      .exec done
+
 
     repositories: (done) ->
       if res.locals.conditions?.repository then return done null, []
@@ -96,5 +89,10 @@ module.exports = (req, res) ->
 
       res.locals data
 
+      console.dir res.locals
+
+      $ "Here?"
       template = require "../../views/lawsuits/list"
+      $ "Here?"
       res.send template res.locals
+      $ "Done!"
