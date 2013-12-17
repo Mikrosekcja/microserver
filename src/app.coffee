@@ -28,7 +28,7 @@ author    = pkg.author.match ///
 ///
 engine.author =
   name    : do author[1]?.trim
-  email   : do author[2]?.trim
+  # email   : do author[2]?.trim # Why advertise?
   website : do author[3]?.trim
 
 app.use do express.favicon
@@ -47,6 +47,7 @@ app.use do express.methodOverride
 app.use (req, res, next) ->
   # Set default values for res.locals
   res.locals
+    # TODO: only engine is worth here. Rest can and should be left to view logic.
     title   : "Mikroserver"
     subtitle: "Mikrosekcja daje radę."
     icon    : "fighter-jet"

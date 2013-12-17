@@ -15,4 +15,6 @@ module.exports = (req, res) ->
 
   Subject.find conditions, null, limit: 100, (error, subjects) ->
     if error then throw error
-    res.json subjects
+    res.locals {subjects}
+
+    res.json _.extend {}, res.locals
