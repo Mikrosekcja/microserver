@@ -58,12 +58,25 @@ module.exports = (req, res) ->
     subjects    : (done) ->
       if not query then return done null
 
-      Subject.find()
-      .or("name.last": new RegExp query, "i")
-      .or("name.first": new RegExp query, "i")
-      .limit(100)
-      .exec done
-
+      async.waterfall [
+        (done)            -> Subject.find()
+          .or("name.last": new RegExp query, "i")
+          .or("name.first": new RegExp query, "i")
+          .limit(20)
+          .exec done
+        (subjects, done)  ->
+          async.mapLimit subjects, 20,
+            (subject, done) ->
+              subject = subject.toObject()
+              async.parallel
+                attorney: (done) -> Lawsuit.count "parties.attorneys": subject._id, done
+                party   : (done) -> Lawsuit.count "parties.subject"  : subject._id, done
+                (error, lawsuits) ->
+                  if error then throw error
+                  subject.lawsuits = lawsuits
+                  done null, subject
+            (error, subjects) -> done error, subjects)
+      ], done
 
     repositories: (done) ->
       if res.locals.conditions?.repository then return done null, []
@@ -88,6 +101,7 @@ module.exports = (req, res) ->
       if error then throw error
 
       res.locals data
+      console.dir data
 
       console.dir res.locals
 

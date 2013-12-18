@@ -85,8 +85,13 @@ module.exports = new View
                     @div class: "thumbnail text-center", ->
                       @i class: "fa fa-user fa-4x"
                       @div class: "caption", style: "height: 100px; overflow: hidden", ->
-                        @strong subject.name.full
-                        # @span class: "badge", year.total
+                        @p -> @strong subject.name.full
+                        if subject.lawsuits.attorney then @p ->
+                          @i class: "fa fa-suitcase"
+                          @text " " + subject.lawsuits.attorney
+                        if subject.lawsuits.party then @p ->
+                          @i class: "fa fa-user"
+                          @text " " + subject.lawsuits.party
 
 
 

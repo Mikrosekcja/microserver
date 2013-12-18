@@ -15,9 +15,25 @@ module.exports = (req, res) ->
       if not subject then throw Error "Not found"
       res.locals { subject }
       async.parallel
-        attorney: (done) -> Lawsuit.find "parties.attorneys": subject._id, done
-        party   : (done) -> Lawsuit.find "parties.subject"  : subject._id, done
+        attorney: (done) -> Lawsuit.count "parties.attorneys": subject._id, done
+        party   : (done) -> Lawsuit.count "parties.subject"  : subject._id, done
         done
+    # Count clients. Takes forever ATM:
+    # (subject, done) ->
+    #   Lawsuit.aggregate [
+    #     $unwind : "parties"
+    #   ,
+    #   #   $match  :
+    #   #     "attorneys": subject._id
+    #   # ,
+    #     $group  :
+    #       _id     : "$parties.subject"
+    #       total   : $sum: 1
+    #   ], (error, clients) ->
+    #     if error then return done error
+    #     $ "Clients of %s: %j", subject.name.full, clients
+    #     subject.clients = clients
+    #     done null, subject
   ], (error, lawsuits) ->
     if error 
       if error.message is "Not found" then res.json error: "Not found"

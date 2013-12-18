@@ -15,10 +15,12 @@ lawsuit = new mongoose.Schema
     subject   :
       type      : mongoose.Schema.ObjectId
       ref       : "Subject"
+      index     : yes
     role      : String
     attorneys : [
       type      : mongoose.Schema.ObjectId
       ref       : "Subject"
+      index     : yes
     ]
   ]
   claims    : [
