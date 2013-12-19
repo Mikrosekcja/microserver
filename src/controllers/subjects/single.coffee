@@ -6,6 +6,8 @@ async   = require "async"
 
 debug   = require "debug"
 
+view    = require "../../views/subjects/single"
+
 $       = debug "microserver:controllers:subjects:single"
 
 module.exports = (req, res) ->
@@ -54,5 +56,10 @@ module.exports = (req, res) ->
         throw error
 
     res.locals {subject}
-    res.json _.extend {}, res.locals
+
+    if req.accepts ["html", "json"] is "json" then res.json _.extend {}, res.locals
+    else res.send view res.locals
+
+    
+    
 

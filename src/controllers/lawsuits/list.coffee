@@ -102,12 +102,8 @@ module.exports = (req, res) ->
       if error then throw error
 
       res.locals data
-      console.dir data
 
       console.dir res.locals
 
-      $ "Here?"
       template = require "../../views/lawsuits/list"
-      $ "Here?"
       res.send template res.locals
-      $ "Done!"
