@@ -62,7 +62,7 @@ module.exports = (req, res) ->
         (done)            -> Subject.find()
           .or("name.last": new RegExp query, "i")
           .or("name.first": new RegExp query, "i")
-          .limit(20)
+          .limit(50)
           .exec done
         (subjects, done)  ->
           async.mapLimit subjects, 20,
@@ -75,7 +75,8 @@ module.exports = (req, res) ->
                   if error then throw error
                   subject.lawsuits = lawsuits
                   done null, subject
-            (error, subjects) -> done error, subjects)
+            (error, subjects) ->
+              done error, _.sortBy subjects, (subject) -> -(subject.lawsuits.party + subject.lawsuits.attorney)
       ], done
 
     repositories: (done) ->
