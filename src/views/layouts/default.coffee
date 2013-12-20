@@ -31,6 +31,12 @@ module.exports = new View (data, content) ->
             @br class: "visible-xs visible-sm"
             @small data.subtitle
 
+            @a
+              href  : "/"
+              class : "btn btn-default btn-lg pull-right"
+              ->
+                @i class: "fa fa-home"
+
         content.call @
         
       @footer class: "container", =>

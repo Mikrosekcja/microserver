@@ -40,11 +40,15 @@ module.exports = new View
           do @hr
           @h3 "Strony"
 
-          roles = _.groupBy data.lawsuit.parties, "role"
-          for role, parties of roles
+          # Hackery. Simplify. DRY.
+          roles = _(data.lawsuit.parties).groupBy("role").value()
+          roles = ({name, parties} for name, parties of roles)
+          roles = _.sortBy roles, "name"
+
+          for role in roles
             @div class: "panel panel-default", => @div class: "panel-body", =>
-              @h4 role
-              groups = _.groupBy parties, (party) =>
+              @h4 role.name
+              groups = _.groupBy role.parties, (party) =>
                 if not party.attorneys? then ""
                 else (attorney.name.full for attorney in party.attorneys).join ", "
 

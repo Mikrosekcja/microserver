@@ -90,7 +90,7 @@ module.exports = new View
                           @i class: "fa fa-suitcase"
                           @text " " + subject.lawsuits.attorney
                         if subject.lawsuits.party then @p ->
-                          @i class: "fa fa-user"
+                          @i class: "fa fa-folder-o"
                           @text " " + subject.lawsuits.party
 
 

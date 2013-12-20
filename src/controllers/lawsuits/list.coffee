@@ -3,6 +3,7 @@ Subject = require "../../models/Subject"
 
 _       = require "lodash"
 async   = require "async"
+tokenizer = require "../../tokenizer"
 
 debug   = require "debug"
 
@@ -33,6 +34,8 @@ module.exports = (req, res) ->
     conditions.repository = new RegExp "^" + conditions.repository + "$", "i"
     conditions.repository.toString = -> original
 
+  { tokens } = tokenizer query
+  if tokens? then conditions.$and = ("claims.value": new RegExp token, "i" for token in tokens)
   $ "conditions are %j", conditions
 
   if  conditions.repository? and
@@ -49,7 +52,6 @@ module.exports = (req, res) ->
       if not query then return done null
 
       Lawsuit.find(res.locals.conditions)
-        .or("claims.value": new RegExp query, "i")
         .limit(100)
         .populate("parties.subject")
         .populate("parties.attorneys")
