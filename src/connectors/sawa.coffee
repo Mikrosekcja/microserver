@@ -54,10 +54,10 @@ if not module.parent
 
   connector = new SawaConnector config
   async.series [
-    # (done) -> async.parallel
-    #   subjects: (done) -> Subject.remove done
-    #   lawsuits: (done) -> Lawsuit.remove done
-    #   done
+    (done) -> async.parallel
+      subjects: (done) -> Subject.remove done
+      lawsuits: (done) -> Lawsuit.remove done
+      done
 
     # Sync subjects
     # (done) -> connector.syncSubjects limit: 5, done

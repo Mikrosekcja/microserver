@@ -26,7 +26,7 @@ module.exports = (req, res) ->
     # Count his lawsuits
     # TODO: all below should go parallel
     (subject, done) ->
-      if not subject then throw Error "Not found"
+      if not subject then return done Error "Not found"
       async.parallel
         attorney: (done) -> Lawsuit.count "parties.attorneys": subject._id, done
         party   : (done) -> Lawsuit.count "parties.subject"  : subject._id, done
