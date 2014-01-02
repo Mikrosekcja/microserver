@@ -1,10 +1,12 @@
 debug   = require "debug"
 $       = debug "microserver:views:subject:single"
 
-_       = require "lodash"
+_         = require "lodash"
+_.string  = require "underscore.string"
+words     = require "underscore.string.words"
 
-layout  = require "../layouts/default"
-View    = require "../View"
+layout    = require "../layouts/default"
+View      = require "../View"
 
 module.exports = new View
   helpers: __dirname + "/../helpers"
@@ -60,37 +62,62 @@ module.exports = new View
                       type      : "submit"
                       -> @i class: "fa fa-search"
 
+                    if data.query then @a
+                      class     : "btn btn-default"
+                      href      : "?"
+                      -> @i class: "fa fa-times"
+
             do @hr
 
             for lawsuit in data.lawsuits
-              @div class: "panel panel-default", -> @div class: "panel-body", ->
-                @h3 ->
-                  @a href: "/lawsuits/#{lawsuit.repository}/#{lawsuit.year}/#{lawsuit.number}", -> @i class: "fa fa-2x fa-folder"
-                  @text " "
-                  @a href: "/lawsuits/#{lawsuit.repository}/#{lawsuit.year}/#{lawsuit.number}", lawsuit.reference_sign
-                  @text " "
-                  @small ->
-                    # Hackery. Simplify. DRY.
-                    roles = _(lawsuit.parties).groupBy("role").value()
-                    roles = ({name, parties} for name, parties of roles)
-                    roles = _.sortBy roles, "name"
+              id = _.string.slugify lawsuit.reference_sign
 
-                    for role in roles
-                      @text role.name + " "
-                      attorneys = _.groupBy role.parties, (party) =>
-                        if not party.attorneys? then return ""
-                        (attorney.name.full for attorney in party.attorneys).join ", "
-                      for attorney, parties of attorneys
-                        for party in parties
-                          @a href: "/subjects/#{party.subject._id}", party.subject.name.full
-                          @text " "
-                        if attorney then @text "(" + attorney + ")"
-                      
-                      @text " ; "
+              @div
+                id    : id
+                class : "panel panel-default"
+                ->
+                  @div class: "panel-body", ->
+                    @h3 ->
+                      @a
+                        href: "/lawsuits/#{lawsuit.repository}/#{lawsuit.year}/#{lawsuit.number}"
+                        -> @i class: "fa fa-fw fa-folder-o pull-left"
+                      @a
+                        href: "/lawsuits/#{lawsuit.repository}/#{lawsuit.year}/#{lawsuit.number}"
+                        lawsuit.reference_sign
+                      @text " "
+                      @small ->
+                        # Hackery. Simplify. DRY.
+                        roles = _(lawsuit.parties).groupBy("role").value()
+                        roles = ({name, parties} for name, parties of roles)
+                        roles = _.sortBy roles, "name"
 
-                for claim in lawsuit.claims
-                  if claim.type is "Uznanie postanowienia wzorca umowy za niedozwolone"
-                    @pre style: "overflow: hidden; max-height: 100px; font-size: 80%", claim.value
+                        for role in roles
+                          @text role.name + " "
+                          attorneys = _.groupBy role.parties, (party) =>
+                            if not party.attorneys? then return ""
+                            (attorney.name.full for attorney in party.attorneys).join ", "
+                          for attorney, parties of attorneys
+                            for party in parties
+                              @a href: "/subjects/#{party.subject._id}", party.subject.name.full
+                              @text " "
+                            if attorney then @text "(" + attorney + ")"
+                          
+                          @text " ; "
+
+                    for claim, i in lawsuit.claims
+                      if claim.type is "Uznanie postanowienia wzorca umowy za niedozwolone"
+                        @pre 
+                          id    : id + "-" + i
+                          class : "claim"
+                          style : "overflow: hidden; max-height: 100px; font-size: 80%"
+                          =>
+                            @text claim.value
+                            @a
+                              class : "btn btn-link btn-xs pull-right"
+                              href  : "?query=" + words(claim.value).join "+"
+                              ->
+                                @i class: "fa fa-search"
+                                @text " " + "similar"
 
 
           if lawsuits_count.attorney 
