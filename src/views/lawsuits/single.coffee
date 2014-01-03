@@ -1,13 +1,13 @@
 debug   = require "debug"
-$       = debug "microserver:views:lawsuit"
+$       = debug "microserver:views:lawsuits:single"
 
 _       = require "lodash"
 
 layout  = require "../layouts/default"
-View    = require "../View"
+View    = require "teacup-view"
 
 module.exports = new View
-  helpers: __dirname + "/../helpers"
+  components: __dirname + "/../components"
   (data) -> 
 
     data.subtitle  = "Lawsuit"

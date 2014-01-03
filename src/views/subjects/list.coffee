@@ -1,12 +1,17 @@
+# TODO: now it's just an old copy of lawsuits/list view.
+
 debug   = require "debug"
-$       = debug "microserver:views:index"
+$       = debug "microserver:views:lawsuits:list"
 
 _       = require "lodash"
 
-View    = require "../View"
 layout  = require "../layouts/default"
 
-module.exports = new View (data) -> 
+View    = require "teacup-view"
+
+module.exports = new View
+  components: __dirname + "/../components"
+  (data) -> 
 
   # Setup some data before we pass it to layout
   # It could be argued that this kind of stuff belongs to controller,

@@ -3,11 +3,11 @@ $       = debug "microserver:views:index"
 
 _       = require "lodash"
 
-View    = require "../View"
 layout  = require "../layouts/default"
+View    = require "teacup-view"
 
 module.exports = new View
-  helpers: __dirname + "/../helpers"
+  components: __dirname + "/../components"
   (data) -> 
 
     # Setup some data before we pass it to layout

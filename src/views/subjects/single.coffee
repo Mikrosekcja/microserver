@@ -6,11 +6,12 @@ _.string  = require "underscore.string"
 words     = require "underscore.string.words"
 
 layout    = require "../layouts/default"
-View      = require "../View"
+View      = require "teacup-view"
 
 module.exports = new View
-  helpers: __dirname + "/../helpers"
+  components: __dirname + "/../components"
   (data) -> 
+    $ "Runninkg view"
 
     {
       subject         # Our man or corpo

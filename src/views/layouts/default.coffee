@@ -1,9 +1,10 @@
 debug   = require "debug"
 $       = debug "microserver:views:layouts:default"
 
-View    = require "../View"
+View    = require "teacup-view"
 
-module.exports = new View (data, content) -> 
+module.exports = new View components: __dirname + "/../components", (data, content) -> 
+
   if not content and typeof data is "function"
     content = data
   
