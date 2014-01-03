@@ -29,8 +29,9 @@ dev: watch
 	NODE_ENV=development DEBUG=microserver,microserver:* nodemon
 
 watch: end-watch
-	./node_modules/.bin/coffee -cmw -o lib src          & echo $$! > .watch_pid
+	./node_modules/.bin/coffee -cmw -o lib src          						 & echo $$! > .watch_pid
 	./node_modules/.bin/coffee -cmw -o assets/scripts/app/ scripts/  & echo $$! > .watch_frontend_pid
+	./node_modules/.bin/stylus -w   -o assets/styles/app   styles/   & 
 
 end-watch:
 	if [ -e .watch_pid ]; then kill `cat .watch_pid`; rm .watch_pid;  else  echo no .watch_pid file; fi

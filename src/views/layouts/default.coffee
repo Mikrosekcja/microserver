@@ -20,6 +20,7 @@ module.exports = new View (data, content) ->
       @link rel: "stylesheet", href: url for url in [
         "//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/css/bootstrap.css"
         "//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.min.css"
+        "/css/microserver.css"
       ]        
 
     @body data: csrf: data._csrf, =>

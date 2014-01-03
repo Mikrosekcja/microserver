@@ -28,7 +28,8 @@
     "debug": "git://github.com/lzrski/debug.git#master",
     "mongoose": "~3.8.1",
     "lodash": "~2.4.1",
-    "underscore.string": "~2.3.3"
+    "underscore.string": "~2.3.3",
+    "stylus": "~0.41.3"
   },
   "devDependencies": {
     "coffee-script": "~1.6.3",

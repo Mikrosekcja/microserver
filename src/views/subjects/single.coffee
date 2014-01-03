@@ -12,7 +12,19 @@ module.exports = new View
   helpers: __dirname + "/../helpers"
   (data) -> 
 
-    data.subtitle  = "Subject"
+    {
+      subject         # Our man or corpo
+      lawsuits        # Lawsuits in which he/she/it is a party
+      lawsuits_count  # Hash { party, attorney }
+      clients         # Array of clients with lawsuit count
+      query
+    } = data
+
+    subtitle = ""
+    if lawsuits_count.party    then subtitle += "party in #{lawsuits_count.party} lawsuits "
+    if lawsuits_count.attorney then subtitle += "attorney of #{clients.length} in #{lawsuits_count.attorney} lawsuits"
+
+    data.subtitle  = subtitle
     data.icon      = "female"
     
     data.scripts  ?= []
@@ -25,12 +37,6 @@ module.exports = new View
     data.styles.push "/css/select2-bootstrap.css"
 
 
-    {
-      subject         # Our man or corpo
-      lawsuits        # Lawsuits in which he/she/it is a party
-      lawsuits_count  # Hash { party, attorney }
-      clients         # Array of clients with lawsuit count
-    } = data
 
     data.title = subject.name.full
 
@@ -38,13 +44,10 @@ module.exports = new View
       @div class: "row", =>
         @tag "main", class: "col-xs-12 col-sm-9", =>
           if lawsuits_count.party 
-            @h3 ->
-              @i class: "fa fa-user"
-              @text " " + "Party in #{lawsuits_count.party} lawsuits. "
 
             @form
               method: "get"
-              class : "form-inline"
+              class : "form-inline hidden-print"
               ->
                 @div class: "input-group input-group-sm", ->
                   @input
@@ -52,20 +55,28 @@ module.exports = new View
                     class       : "form-control"
                     placeholder : "There are #{lawsuits_count.party} lawsuits in which #{subject.name.full} is a party. Type to search..."
                     name        : "query"
-                    value       : data.query
+                    value       : query
                     data        :
                       shortcut    : "/"
                   
                   @span class: "input-group-btn", ->
+                    if query then @a
+                      class     : "btn btn-default"
+                      href      : "?"
+                      -> @i class: "fa fa-times"
                     @button
                       class     : "btn btn-primary"
                       type      : "submit"
                       -> @i class: "fa fa-search"
 
-                    if data.query then @a
-                      class     : "btn btn-default"
-                      href      : "?"
-                      -> @i class: "fa fa-times"
+
+            if query then @div class: "visible-print clearfix", ->
+              @p ->
+                @strong "Query: "
+                @text data.query
+              @p class: "pull-right", ->
+                @em " " + "#{lawsuits.length} matching"
+
 
             do @hr
 
@@ -74,17 +85,17 @@ module.exports = new View
 
               @div
                 id    : id
-                class : "panel panel-default"
+                class : "lawsuit panel panel-default"
                 ->
                   @div class: "panel-body", ->
-                    @h3 ->
+                    @h4 ->
                       @a
                         href: "/lawsuits/#{lawsuit.repository}/#{lawsuit.year}/#{lawsuit.number}"
                         -> @i class: "fa fa-fw fa-folder-o pull-left"
                       @a
                         href: "/lawsuits/#{lawsuit.repository}/#{lawsuit.year}/#{lawsuit.number}"
                         lawsuit.reference_sign
-                      @text " "
+                      do @br
                       @small ->
                         # Hackery. Simplify. DRY.
                         roles = _(lawsuit.parties).groupBy("role").value()
@@ -113,15 +124,15 @@ module.exports = new View
                           =>
                             @text claim.value
                             @a
-                              class : "btn btn-link btn-xs pull-right"
-                              href  : "?query=" + words(claim.value).join "+"
+                              class : "btn btn-link btn-xs pull-right hidden-print"
+                              href  : "?query=" + words(claim.value)?.join "+"
                               ->
                                 @i class: "fa fa-search"
                                 @text " " + "similar"
 
 
           if lawsuits_count.attorney 
-            @h3 ->
+            @h6 ->
               @i class: "fa fa-suitcase"
               @text " " + "Attorney of #{clients.length} parties in #{lawsuits_count.attorney} lawsuits"
             @ul class: "fa-ul", -> for client in clients
