@@ -4,12 +4,15 @@ lawsuit = new mongoose.Schema
   repository: 
     type      : String
     index     : yes
+    required  : yes
   year      : 
     type      : Number
     index     : yes
+    required  : yes
   number    : 
     type      : Number
     index     : yes
+    required  : yes
   file_date : Date
   parties   : [
     subject   :
@@ -28,6 +31,31 @@ lawsuit = new mongoose.Schema
       type      : String
     value     : String
   ]
+
+  history   : [
+    # History contains events
+    # In future they will be used to calculate curent state of lawsuit (parties, attorneys, etc.)
+    # Array of events
+    description : 
+      type        : String
+      required    : yes
+      index       : yes
+    filed       : 
+      on          : 
+        type        : Date
+        # required    : yes
+        index       : yes
+      # by          : [
+      #   type        : ObjectId
+      #   ref         : Subject    
+      # ]
+    received    : 
+      on          : 
+        type        : Date
+        # required    : yes
+        index       : yes
+
+  ] 
   # TODO:
   # staff     : [
   #   person    :

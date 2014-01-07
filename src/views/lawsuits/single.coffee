@@ -3,6 +3,7 @@ $       = debug "microserver:views:lawsuits:single"
 
 _       = require "lodash"
 
+moment  = require "moment"
 layout  = require "../layouts/default"
 View    = require "teacup-view"
 
@@ -27,6 +28,7 @@ module.exports = new View
       repository
       year
       number
+      history
     } = data.lawsuit
 
     layout data, =>
@@ -250,26 +252,31 @@ module.exports = new View
                       placeholder : "Search for similiar case..."
                       name        : "query"
                       value       : data.query
-                    @span class: "input-group-btn", =>
-                      @button
-                        class     : "btn btn-primary"
-                        type      : "submit"
-                        => @i class: "fa fa-search"
 
-              # @div class: "panel-body", => @div class: "list-group", => for suit in data.lawsuits
-              #   @a href: "/lawsuits/#{suit.repository}/#{suit.year}/#{suit.number}", class: "list-group-item", =>
-              #     @p class: "text-muted", =>
-              #       @span class: "fa-stack fa-sm", =>
-              #         @i class: "fa fa-stack-2x fa-folder"
-              #         @i class: "fa fa-plus fa-stack-1x fa-inverse"
+            @h5 "Deadlines"
 
-              #       @text " " + suit.reference_sign
 
-              #     for party in suit.parties
-              #       @p => @small =>
-              #         @i class: "fa fa-user"
-              #         @text " " + party.subject.name.full
+            @h5 "History"
+            for event in history
+              @div class: "panel panel-default", =>
+                @div class: "panel-body", =>
+                  @p event.description
+                  @p moment(event.received.on).format "YYYY-MM-DD"
 
-              #     for claim in suit.claims
-              #       if claim.type is "Uznanie postanowienia wzorca umowy za niedozwolone"
-              #         @small => @pre style: "overflow: hidden; max-height: 100px; font-size: 80%", claim.value
+                # @div class: "panel-body", => @div class: "list-group", => for suit in data.lawsuits
+                #   @a href: "/lawsuits/#{suit.repository}/#{suit.year}/#{suit.number}", class: "list-group-item", =>
+                #     @p class: "text-muted", =>
+                #       @span class: "fa-stack fa-sm", =>
+                #         @i class: "fa fa-stack-2x fa-folder"
+                #         @i class: "fa fa-plus fa-stack-1x fa-inverse"
+
+                #       @text " " + suit.reference_sign
+
+                #     for party in suit.parties
+                #       @p => @small =>
+                #         @i class: "fa fa-user"
+                #         @text " " + party.subject.name.full
+
+                #     for claim in suit.claims
+                #       if claim.type is "Uznanie postanowienia wzorca umowy za niedozwolone"
+                #         @small => @pre style: "overflow: hidden; max-height: 100px; font-size: 80%", claim.value
