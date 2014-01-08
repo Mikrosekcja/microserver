@@ -75,6 +75,4 @@ lawsuit.index {
 lawsuit.virtual("reference_sign")
   .get -> "#{@repository} #{@number} / #{@year.toString().slice -2}"
 
-lawsuit.plugin (require "../SyncService").plugin
-
 module.exports = mongoose.model "Lawsuit", lawsuit

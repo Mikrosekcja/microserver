@@ -13,7 +13,4 @@ subject.virtual("name.full")
     if @name.first then "#{@name.first } #{@name.last}"
     else @name.last
   
-
-subject.plugin (require "../SyncService").plugin
-
 module.exports = mongoose.model "Subject", subject
