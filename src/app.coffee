@@ -10,6 +10,7 @@ app       = express()
 $         = debug "microserver"
 
 pkg       = require "../package.json"
+config    = require "./config"
 
 engine    =
   name:     "Microserver"
@@ -26,10 +27,13 @@ author    = pkg.author.match ///
   (?:\((.*)\))? # website
   \s*
 ///
+
 engine.author =
   name    : do author[1]?.trim
   # email   : do author[2]?.trim # Why advertise?
   website : do author[3]?.trim
+
+
 
 app.use do express.favicon
 app.use '/js',      express.static 'assets/scripts/app'
@@ -63,5 +67,5 @@ lawsuits.plugInto app
 subjects = require "./controllers/subjects"
 subjects.plugInto app
 
-mongoose.connect "mongodb://localhost/test"
+mongoose.connect config.mongo?.uri or "mongodb://localhost/test"
 app.listen 31337

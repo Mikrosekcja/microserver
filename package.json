@@ -2,9 +2,10 @@
   "name": "mikroserver",
   "version": "0.2.4",
   "description": "Common sense layer for Currenda Sawa",
-  "main": "lib/app.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "start": "node lib/app.js"
   },
   "repository": {
     "type": "git",

@@ -23,10 +23,6 @@ browserify:
 build: clean init # browserify
 	./node_modules/.bin/coffee -cm -o lib src
 	./node_modules/.bin/coffee -cm -o assets/scripts/app/ scripts/
-	
-
-dev: watch
-	NODE_ENV=development DEBUG=microserver,microserver:* nodemon
 
 watch: end-watch
 	./node_modules/.bin/coffee -cmw -o lib src          						 & echo $$! > .watch_pid
@@ -37,8 +33,14 @@ end-watch:
 	if [ -e .watch_pid ]; then kill `cat .watch_pid`; rm .watch_pid;  else  echo no .watch_pid file; fi
 	if [ -e .watch_frontend_pid ]; then kill `cat .watch_frontend_pid`; rm .watch_frontend_pid; else echo no .watch_pid file; fi
 
+dev: watch
+	NODE_ENV=development DEBUG=microserver,microserver:* nodemon lib/app.js
+
 start:
 	npm start
+
+forever: build
+	forever lib/app.js
 
 test:
 	npm test

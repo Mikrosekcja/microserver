@@ -1,6 +1,6 @@
 node_modules/
 lib/
-config.json
+./src/config.coffee
 *.sublime-workspace
 npm-debug.log
 .watch_*
