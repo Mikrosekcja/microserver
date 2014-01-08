@@ -11,17 +11,16 @@
     "url": "https://github.com/Mikrosekcja/microserver"
   },
   "keywords": [
-    "Currenda",
-    "Sawa",
     "Court",
+    "Case management",
     "Mikrosekcja"
   ],
   "author": "Tadeusz Łazurski <tadeusz@lazurski.pl> (http://lazurski.pl)",
   "license": "GPL 3",
   "dependencies": {
-    "teacup": "~0.2.10",
     "express": "~3.4.5",
-    "mssql": "~0.3.4",
+    "express-controller": "git://github.com/Mikrosekcja/express-controller.git#v0.1.3",
+    "teacup-view": "git://github.com/Mikrosekcja/teacup-view.git#v0.1.5",
     "nconf": "~0.6.9",
     "source-map-support": "~0.2.5",
     "async": "~0.2.9",
@@ -29,8 +28,8 @@
     "mongoose": "~3.8.1",
     "lodash": "~2.4.1",
     "underscore.string": "~2.3.3",
-    "stylus": "~0.41.3",
-    "moment": "~2.5.0"
+    "moment": "~2.5.0",
+    "stylus": "~0.42.0"
   },
   "devDependencies": {
     "coffee-script": "~1.6.3",

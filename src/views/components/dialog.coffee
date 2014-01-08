@@ -1,4 +1,4 @@
-View = require "../View"
+View = require "teacup-view"
 
 module.exports = new View (options, content) ->
   @div
