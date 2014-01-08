@@ -28,6 +28,7 @@
     "mongoose": "~3.8.1",
     "lodash": "~2.4.1",
     "underscore.string": "~2.3.3",
+    "underscore.string.words": "git://github.com/lzrski/underscore.string.words.git#v0.3.6",
     "moment": "~2.5.0",
     "stylus": "~0.42.0"
   },
