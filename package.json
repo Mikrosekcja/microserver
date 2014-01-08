@@ -1,6 +1,6 @@
 {
   "name": "mikroserver",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Common sense layer for Currenda Sawa",
   "main": "lib/app.js",
   "scripts": {
