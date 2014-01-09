@@ -23,11 +23,12 @@ browserify:
 build: clean init # browserify
 	./node_modules/.bin/coffee -cm -o lib src
 	./node_modules/.bin/coffee -cm -o assets/scripts/app/ scripts/
+	./node_modules/.bin/stylus 	   -o assets/styles/app   styles/   & 
 
 watch: end-watch
 	./node_modules/.bin/coffee -cmw -o lib src          						 & echo $$! > .watch_pid
 	./node_modules/.bin/coffee -cmw -o assets/scripts/app/ scripts/  & echo $$! > .watch_frontend_pid
-	./node_modules/.bin/stylus -w   -o assets/styles/app   styles/   & 
+	./node_modules/.bin/stylus -w  	-o assets/styles/app   styles/   & 
 
 end-watch:
 	if [ -e .watch_pid ]; then kill `cat .watch_pid`; rm .watch_pid;  else  echo no .watch_pid file; fi
@@ -40,7 +41,7 @@ start:
 	npm start
 
 forever: build
-	forever lib/app.js
+	forever start lib/app.js
 
 test:
 	npm test
