@@ -5,6 +5,9 @@ subject = new mongoose.Schema
     first : String
     last  : String
 
+  # Synchronisation metadata.
+  _sync : Object
+
 subject.set "toJSON"  , virtuals: true
 subject.set "toObject", virtuals: true
 

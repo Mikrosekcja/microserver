@@ -63,6 +63,9 @@ lawsuit = new mongoose.Schema
   #     ref       : "Employee"
   # ]
 
+  # Synchronisation metadata.
+  _sync     : Object
+
 lawsuit.index {
     repository: 1
     year      : 1
