@@ -4,6 +4,7 @@ subject = new mongoose.Schema
   name  :
     first : String
     last  : String
+  _sync : Object
 
 subject.set "toJSON"  , virtuals: true
 subject.set "toObject", virtuals: true

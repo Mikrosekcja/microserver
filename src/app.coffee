@@ -10,7 +10,7 @@ app       = express()
 $         = debug "microserver"
 
 pkg       = require "../package.json"
-config    = require "./config"
+config    = require "../config"
 
 engine    =
   name:     "Microserver"
@@ -67,5 +67,6 @@ lawsuits.plugInto app
 subjects = require "./controllers/subjects"
 subjects.plugInto app
 
-mongoose.connect config.mongo?.uri or "mongodb://localhost/test"
+mongourl = if config.mongo?.uri? then (Array config.mongo.uri).join "," else "mongodb://localhost/test"
+mongoose.connect mongourl 
 app.listen 31337

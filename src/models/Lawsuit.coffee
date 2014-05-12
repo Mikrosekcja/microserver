@@ -31,6 +31,7 @@ lawsuit = new mongoose.Schema
       type      : String
     value     : String
   ]
+  _sync     : Object
 
   history   : [
     # History contains events
