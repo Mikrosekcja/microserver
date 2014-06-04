@@ -1,5 +1,8 @@
 if not module.parent then do (require "source-map-support").install
 
+# TODO: Investigate Edge.js + Iron Python feasibility to communicate with MSSQL
+# SEE:  http://blog.jonathanchannon.com/2013/12/20/using-sql-server-with-nodejs/
+
 debug     = require "debug"
 
 
