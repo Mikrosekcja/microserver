@@ -3,14 +3,14 @@ if not module.parent then do (require "source-map-support").install
 express   = require "express"
 _         = require "lodash"
 async     = require "async"
-mongoose  = require "mongoose" 
+mongoose  = require "mongoose"
 debug     = require "debug"
 
 app       = express()
 $         = debug "microserver"
 
 pkg       = require "../package.json"
-config    = require "../config"
+config    = require "./config"
 
 engine    =
   name:     "Microserver"
@@ -67,6 +67,6 @@ lawsuits.plugInto app
 subjects = require "./controllers/subjects"
 subjects.plugInto app
 
-mongourl = if config.mongo?.uri? then (Array config.mongo.uri).join "," else "mongodb://localhost/test"
-mongoose.connect mongourl 
-app.listen 31337
+$ "Connecting to #{(Array config.mongo.url).join ","}"
+mongoose.connect (Array config.mongo.url).join ","
+app.listen config.port

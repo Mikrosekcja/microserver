@@ -1,9 +1,9 @@
 node_modules/
 lib/
-./src/config.coffee
 *.sublime-workspace
 npm-debug.log
 .watch_*
 assets/scripts/app/
 assets/styles/app/
 config.json
+config.cson

@@ -23,7 +23,7 @@ $       = debug "SyncService:Connector:Sawa"
 class SawaConnector
   constructor: (config, done) ->
     # TODO: @connection = new mssql.Connection ...
-    # Have to deal with async anture of conne
+    # Have to deal with async nature of connect
     $ "Connecting to %s", config.server
     mssql.connect _.pick config, [
       "user"
@@ -48,12 +48,14 @@ if not module.parent
   $ "Initializing CLI for SawaConnector"
 
   path    = require "path"
+  # TODO: Use CSON configuration (as in app.js)
   nconf   = require "nconf"
   nconf.file path.resolve __dirname, "../../config.json"
   config  = nconf.get "sawa"
   mongoose = require "mongoose"
 
-  mongoose.connect "mongodb://172.17.0.6/test"
+  # TODO: use configuration, preferably in cson (like in Dredd)
+  mongoose.connect "mongodb://localhost/test"
 
   connector = new SawaConnector config
   async.series [
@@ -65,7 +67,7 @@ if not module.parent
     # Sync subjects
     # (done) -> connector.syncSubjects limit: 5, done
     (done) -> connector.syncLawsuits done
-    
+
     connector.close
   ], (error) ->
     if error then throw error
