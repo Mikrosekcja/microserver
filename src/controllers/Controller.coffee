@@ -16,6 +16,8 @@ class Controller
 
     # Root directory for controller's modules (see below)
     directory   = @options.directory or
+                  # TODO: This is a nasty hack and it bites when using pm2 in cluster mode
+                  # SEE : https://github.com/Unitech/pm2#execute-any-script-what-is-fork-mode
                   path.resolve require.main.filename, "..", "controllers/", @options.name
 
     for name, route of @routes
@@ -69,7 +71,7 @@ class Controller
         module_path = path.resolve directory, name
         $ "Loading function for %s (%s %j) from %s", name, method, url, module_path
         @actions[name]  = (require module_path).bind @
-    
+
   plugInto    : (app) ->
     # console.dir @
     for name, route of @routes
@@ -80,5 +82,5 @@ class Controller
       for single_url in url
         $ "Plugging %s into app.%s %s", name, method, single_url
         app[method] single_url, @actions[name]
-      
+
 module.exports = Controller
