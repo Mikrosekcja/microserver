@@ -1,5 +1,6 @@
 # TODO: Move to official node image
 # FROM node
+# TODO: or use https://github.com/phusion/passenger-docker
 
 FROM monokrome/node
 
@@ -8,7 +9,7 @@ MAINTAINER Tadeusz Łazurski <tadeusz@lazurski.pl>
 RUN mkdir /app
 RUN npm i -g pm2@latest
 
-# TODO: Consifer using volumes
+# TODO: Consider using volumes
 ADD . /app
 WORKDIR /app
 
