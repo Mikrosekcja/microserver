@@ -18,7 +18,7 @@ module.exports = (req, res) ->
   ]
 
   { query } = req.query
-  
+
   if match = query?.trim().match /^([a-z]+)\s+([0-9]+)\s*\/\s*(([0-9]{2})?[0-9]{2})$/i
     conditions.repository = match[1]
     conditions.number     = Number match[2]
@@ -41,14 +41,14 @@ module.exports = (req, res) ->
   if  conditions.repository? and
       conditions.year? and
       conditions.number? then return res.redirect "/lawsuits/#{conditions.repository}/#{conditions.year}/#{conditions.number}"
-      
+
 
   res.locals { conditions } # This is for monoose queries
   res.locals conditions     # This is to be used in views
   res.locals { query }      # Used here and there :)
 
   async.parallel
-    lawsuits    : (done) -> 
+    lawsuits    : (done) ->
       if not query then return done null
 
       Lawsuit.find(res.locals.conditions)
@@ -61,11 +61,12 @@ module.exports = (req, res) ->
       if not query then return done null
 
       async.waterfall [
-        (done)            -> Subject.find()
-          .or("name.last": new RegExp query, "i")
-          .or("name.first": new RegExp query, "i")
-          .limit(50)
-          .exec done
+        (done)            ->
+          Subject.find()
+            .or("name.last": new RegExp query, "i")
+            .or("name.first": new RegExp query, "i")
+            .limit(50)
+            .exec done
         (subjects, done)  ->
           async.mapLimit subjects, 20,
             (subject, done) ->
@@ -95,11 +96,11 @@ module.exports = (req, res) ->
         $match: res.locals.conditions
         spec
       ]
-        
+
       Lawsuit.aggregate spec, done
-    
+
     count       : (done) -> Lawsuit.count res.locals.conditions, done
-    
+
     (error, data) ->
       if error then throw error
 

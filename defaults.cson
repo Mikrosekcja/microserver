@@ -9,7 +9,7 @@ Make changes to config.cson instead. Settings from there will have precedence ov
 port  : 31337
 
 mongo :
-  url   : "mongodb://localhost/dredd"
+  url   : "mongodb://localhost/microserver"
 
 sawa  :
   user    : ""

@@ -20,6 +20,7 @@
   "license": "GPL 3",
   "dependencies": {
     "async": "~0.2.9",
+    "config-object": "^0.2.0",
     "cson": "^1.6.0",
     "debug": "git://github.com/lzrski/debug.git#master",
     "express": "~3.4.5",

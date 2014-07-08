@@ -4,21 +4,21 @@ if not module.parent then do (require "source-map-support").install
 # SEE:  http://blog.jonathanchannon.com/2013/12/20/using-sql-server-with-nodejs/
 
 debug     = require "debug"
-
-
+config    = require "config-object"
 async     = require "async"
 _         = require "lodash"
-
 mssql     = require "mssql"
 Statement = require "./SQLStatement"
 
 Lawsuit   = require "../models/Lawsuit"
 Subject   = require "../models/Subject"
 
-
+config.load [
+  '../../defaults.cson'
+  '../../config.cson'
+]
 
 $       = debug "SyncService:Connector:Sawa"
-
 
 class SawaConnector
   constructor: (config, done) ->
@@ -49,15 +49,13 @@ if not module.parent
 
   path    = require "path"
   # TODO: Use CSON configuration (as in app.js)
-  nconf   = require "nconf"
-  nconf.file path.resolve __dirname, "../../config.json"
-  config  = nconf.get "sawa"
+
   mongoose = require "mongoose"
 
   # TODO: use configuration, preferably in cson (like in Dredd)
-  mongoose.connect "mongodb://localhost/test"
+  mongoose.connect config.mongo.url.join ','
 
-  connector = new SawaConnector config
+  connector = new SawaConnector config.get "sawa"
   async.series [
     (done) -> async.parallel
       subjects: (done) -> Subject.remove done
